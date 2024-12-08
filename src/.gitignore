@@ -1,0 +1,24 @@
+# Ignore build directories
+/build/
+
+# Ignore binary files
+*.out
+*.o
+*.a
+*.lib
+*.pdb
+
+# Ignore CMake and Visual Studio files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.vcxproj
+*.vcxproj.user
+*.suo
+*.user
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
