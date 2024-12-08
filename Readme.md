@@ -47,5 +47,7 @@ After copying, both files should be placed in the bin folder.
 
 # Running the Application
 After placing the required files in the bin folder, you can run the application.
+Please be sure that you have extracted all the waveforms ( .csv) just outside src folder ( you can do so by just select "Extract here").  
+You should be able to observe the outcome to a out.csv file in the same folder with bin file
 
 Note: Ensure that all input CSV files are placed just outside of the src folder.
