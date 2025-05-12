@@ -14,6 +14,8 @@
 #include "signal/processing.hpp"
 #include "common.hpp"
 #include <fstream>
+#include "gui/main_gui.hpp"
+
 
 namespace fs = std::filesystem;
 std::vector<std::string> load_csv_filenames(const std::string& directory) {
@@ -62,5 +64,8 @@ int main(){
         results.push_back(result);
     }
     my_handler.write("out.csv",results);
+
+    runGui();
+    
 
 }

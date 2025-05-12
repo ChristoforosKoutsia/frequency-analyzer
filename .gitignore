@@ -28,3 +28,9 @@
 # Executables
 *.out
 *.app
+
+# Ignore all CSV files
+*.csv
+
+# Ignore 3rdparty Qt folder
+src/3rdparty/Qt/
