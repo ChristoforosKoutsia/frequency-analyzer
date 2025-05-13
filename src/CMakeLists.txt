@@ -39,7 +39,9 @@ target_include_directories(WaveAnalyzer PRIVATE
     ${FFT_DIR}
     ${CMAKE_SOURCE_DIR}/sysio
     ${CMAKE_SOURCE_DIR}/signal
-	
+    ${CMAKE_SOURCE_DIR}/gui/Widgets/include
+    ${CMAKE_SOURCE_DIR}/gui
+    ${CMAKE_SOURCE_DIR}
 )
 
 message("FFT_LIB: ${FFT_LIB}")

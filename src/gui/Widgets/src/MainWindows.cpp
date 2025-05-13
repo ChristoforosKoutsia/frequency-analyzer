@@ -42,6 +42,8 @@ QAction* Toolbar::_CreateAction(Action &action)
     connect(qAction, &QAction::triggered, [&action]() {
         action.handler(); // Call the handler method of the Action object
     });
+
+    return qAction;
 }
 
 void Toolbar::SetupActions(std::vector<Action> actions) {
