@@ -20,6 +20,8 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QChart>
 #include <QtCharts/QXYSeries>
+#include <QGraphicsLineItem>
+#include <QToolTip>
 #include <vector>
 
 
@@ -31,6 +33,32 @@
 /*****************************************/
 
 /***********Class Declaration Here*****************/
+
+/* QLabel declaration*/
+
+class DataLabel : public QLabel
+{
+    Q_OBJECT
+public:
+    explicit DataLabel(QWidget *parent = nullptr)
+        : QLabel(parent) {}
+
+    // Set the data to display (default: x/y)
+    void setData(double x, double y) {
+        setText(QString("X: %1\nY: %2").arg(x).arg(y));
+    }
+
+    // Set custom text
+    void setData(const QString& text) {
+        setText(text);
+    }
+
+    // Clear the label
+    void clearData() {
+        setText("");
+    }
+};
+
 
 /* This class does not really belongs here. We should move it around*/
 class Action
@@ -54,6 +82,7 @@ class Action
        QString m_qstring;
        bool m_add_separator;
 };
+
 
 
 class Toolbar : public QToolBar 
@@ -93,6 +122,38 @@ public :
     void AddCentralWidget(QWidget *widget);
 };
 
+
+/* class to create features on the plot like mouse Events 
+ and cursor feature to capture data*/
+class ChartView : public QChartView
+{
+    Q_OBJECT
+
+public:
+    explicit ChartView(QChart *chart, QWidget *parent = nullptr);
+    void setDataLabel(DataLabel* label) { m_dataLabel = label; }
+
+protected:
+   /* This methods are overriden in order to develop the cursor feature*/
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void leaveEvent(QEvent *event) override;
+
+    /* We will override wheelEvent to implement zoom in/out with the scrollbar*/
+    void wheelEvent(QWheelEvent *event) override;
+
+    /* we can add some callback functions on keypressEvent*/
+    void keyPressEvent(QKeyEvent *event) override;
+
+
+private:
+    QGraphicsLineItem *m_vLine = nullptr;
+
+    /* create data label at the bottom to track the data value*/
+    DataLabel* m_dataLabel = nullptr;
+};
+
+
+
 class GraphChart : public QWidget
 {
     Q_OBJECT
@@ -100,7 +161,7 @@ class GraphChart : public QWidget
 public:
     explicit GraphChart(QWidget *parent = nullptr);
 
-    void createChart(const QString &title = "Signal Plot");
+    void createChart(const QString &title = "Signals");
     QLineSeries* addSeries(const std::vector<double> &x, const std::vector<double> &y, const QString &seriesName = "Series");
     void clearChart();
     void setTitle(const QString &title);
@@ -111,7 +172,20 @@ public:
 
 private:
     QChart *m_chart;
-    QChartView *m_chartView;
+    ChartView *m_chartView;
+    DataLabel *m_dataLabel;
+
+    /* we will use a small data Label for the points*/
 };
+
+
+
+
+
+
+
+
+
+
 
 #endif // MAINWINDOWS_HPP
