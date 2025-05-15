@@ -205,37 +205,17 @@ ChartView::ChartView(QChart *chart, QWidget *parent)
 // Handles mouse movement over the chart view
 void ChartView::mouseMoveEvent(QMouseEvent *event)
 {
-    QPointF chartPos = chart()->mapToValue(event->pos());
-    QRectF plotArea = chart()->plotArea();
-
-    // Draw the vertical line at the mouse's x position, spanning the plot area
-    m_vLine->setLine(event->pos().x(), plotArea.top(), event->pos().x(), plotArea.bottom());
-    m_vLine->show();
-
-    // If there is at least one series, find the nearest data point in the first series
-    if (!chart()->series().isEmpty()) {
-        auto *series = qobject_cast<QLineSeries*>(chart()->series().first());
-        if (series) {
-            qreal minDist = std::numeric_limits<qreal>::max();
-            QPointF nearest;
-            // Iterate through all points to find the closest x to the cursor
-            for (const QPointF &pt : series->points()) {
-                qreal dist = std::abs(pt.x() - chartPos.x());
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearest = pt;
-                }
-            }
-
-            /**/
-            if (m_dataLabel) 
-            {
-                m_dataLabel->setData(nearest.x(), nearest.y());
-            }
-        }
+    if (m_cursorLocked) 
+    {
+        // Use the locked position, not the current mouse position
+        QMouseEvent lockedEvent(event->type(), m_lockedPos, event->button(), event->buttons(), event->modifiers());
+        updateCursorAndLabel(&lockedEvent);
+        return;
     }
+    updateCursorAndLabel(event);
     QChartView::mouseMoveEvent(event);
 }
+
 
 // Handles the mouse leaving the chart view area
 void ChartView::leaveEvent(QEvent *event)
@@ -264,6 +244,61 @@ void ChartView::keyPressEvent(QKeyEvent *event)
         event->accept();
     } else {
         QChartView::keyPressEvent(event); // Default handling for other keys
+    }
+}
+
+/* added double click and right click functionality
+ On doouble click the cursor is locked to a specific point
+ On single click the cursor is movable again*/
+
+ void ChartView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        m_cursorLocked = true;
+        m_lockedPos = event->pos();
+        // Optionally update the cursor immediately
+        mouseMoveEvent(event);
+        event->accept();
+    } else {
+        QChartView::mouseDoubleClickEvent(event);
+    }
+}
+
+void ChartView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton && m_cursorLocked) {
+        m_cursorLocked = false;
+        event->accept();
+    } else {
+        QChartView::mousePressEvent(event);
+    }
+}
+
+// Helper function to avoid code duplication
+void ChartView::updateCursorAndLabel(QMouseEvent *event)
+{
+    QPointF chartPos = chart()->mapToValue(event->pos());
+    QRectF plotArea = chart()->plotArea();
+
+    m_vLine->setLine(event->pos().x(), plotArea.top(), event->pos().x(), plotArea.bottom());
+    m_vLine->show();
+
+    if (!chart()->series().isEmpty()) {
+        auto *series = qobject_cast<QLineSeries*>(chart()->series().first());
+        if (series) {
+            qreal minDist = std::numeric_limits<qreal>::max();
+            QPointF nearest;
+            for (const QPointF &pt : series->points()) {
+                qreal dist = std::abs(pt.x() - chartPos.x());
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = pt;
+                }
+            }
+            if (m_dataLabel) {
+                m_dataLabel->setData(nearest.x(), nearest.y());
+            }
+        }
     }
 }
 

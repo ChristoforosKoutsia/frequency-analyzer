@@ -42,6 +42,7 @@ void runGui() {
         chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, "Signal 1");
     }
 
+    /* make main Signal Plot to be floatable*/
     QDockWidget* graphDock = new QDockWidget("Signal Plot", mainWindow);
     graphDock->setWidget(chartWidget);
     graphDock->setFloating(false); // Start docked, but user can float it

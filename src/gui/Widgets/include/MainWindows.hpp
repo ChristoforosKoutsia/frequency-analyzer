@@ -144,12 +144,23 @@ protected:
     /* we can add some callback functions on keypressEvent*/
     void keyPressEvent(QKeyEvent *event) override;
 
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+    void mousePressEvent(QMouseEvent *event) override;
 
 private:
     QGraphicsLineItem *m_vLine = nullptr;
 
     /* create data label at the bottom to track the data value*/
     DataLabel* m_dataLabel = nullptr;
+
+    /* lock functionality so the cursor can be locked to a specific point*/
+    bool m_cursorLocked = false;
+    QPoint m_lockedPos;
+
+    void updateCursorAndLabel(QMouseEvent *event);
+
+
 };
 
 
@@ -175,7 +186,7 @@ private:
     ChartView *m_chartView;
     DataLabel *m_dataLabel;
 
-    /* we will use a small data Label for the points*/
+    
 };
 
 
