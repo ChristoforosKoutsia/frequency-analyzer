@@ -21,6 +21,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QXYSeries>
 #include <QGraphicsLineItem>
+#include <QTableWidget>
 #include <QToolTip>
 #include <vector>
 
@@ -84,16 +85,41 @@ class Action
 };
 
 
+/* Create custom Menubar*/
+class MenuBar : public QMenuBar
+{
+    Q_OBJECT
+
+public:
+    explicit MenuBar(const std::vector<Action*>& actions,QWidget *parent = nullptr);
+
+    /*Setup all actions existing in the buffer*/
+    void SetupActions(const std::vector<Action*>& actions);
+
+private:
+
+    /* Creating a new QAction*/
+    QAction* _CreateAction(Action &action);
+    
+    void _AddActionToMenuBar(QAction *action, bool addSeparator = false);
+
+    /*Helper function to connect an action to a signal */
+    void _ConnectAction(QAction *action, const QString &actionName, void (Action::*handler)());
+    
+};
+
+
+
 
 class Toolbar : public QToolBar 
 {
     Q_OBJECT
 
 public:
-    explicit Toolbar(QWidget *parent,std::vector<Action> actions);
+    explicit Toolbar(QWidget *parent,const std::vector<Action*>& actions);
 
     /*Setup all actions existing in the buffer*/
-    void SetupActions(std::vector<Action> actions);
+    void SetupActions(const std::vector<Action*>& actions);
 
 private:
 
@@ -116,10 +142,12 @@ class MainWindow : public QMainWindow
 
 public :
     explicit MainWindow(QWidget *parent = nullptr);
-    void AddMenuBar(QMenuBar* menu);
+    void AddMenuBar(MenuBar* menu);
     void AddToolbar(Toolbar *toolbar);
     /* central widget could be whatever widget*/
     void AddCentralWidget(QWidget *widget);
+    void AddTableWidget(QTableWidget *table);
+
 };
 
 
@@ -180,23 +208,31 @@ public:
 
     QChart* chart();
     QChartView* chartView();
-
+public slots:
+    /*we need to toggle the visibility - based on handlers*/
+    void setSeriesVisible(const QString& name, bool visible);
 private:
     QChart *m_chart;
     ChartView *m_chartView;
     DataLabel *m_dataLabel;
-
-    
 };
 
+/* abstract class for TableWiget. It will be used mainly for signals representation*/
+class TableWidget : public QTableWidget
+{
+    Q_OBJECT
 
+public :
+    /*TableWIdget shall know how many */
+    explicit TableWidget(
+        int colCount,
+        std::string headerLabels,
+        bool inDockWIdget = false,
+        QWidget *parent = nullptr
+);
 
-
-
-
-
-
-
-
+    /*add new row*/
+    virtual void AddRow();
+};
 
 #endif // MAINWINDOWS_HPP

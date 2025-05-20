@@ -19,7 +19,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-double SignalProcessing::calculate_frequency_FFT(const std::vector<double>& time, std::vector<double>& amplitude) {
+std::vector<std::vector<double>> SignalProcessing::calculate_frequency_FFT(const std::vector<double>& time, std::vector<double>& amplitude) {
     size_t n = amplitude.size();
 
     double fs = 1.0 / (time[1] - time[0]); // getting the sampling rate assuming that is uniform
@@ -40,16 +40,27 @@ double SignalProcessing::calculate_frequency_FFT(const std::vector<double>& time
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
-    // compute magnitude spectrum
     std::vector<double> frequencies(n / 2), magnitude(n / 2);
-    for (size_t i = 0; i < n / 2; ++i) {
+    for (size_t i = 0; i < n / 2; ++i) 
+    {
         frequencies[i] = i * fs / n;
         magnitude[i] = std::abs(fft_output[i]);
     }
 
+    std::vector<std::vector<double>> res(2);
+    res[0] = frequencies;
+    res[1] = magnitude;
+
+    /* return a vecotr of two vectors with frequencies and magnitudes*/
+    return res;
+}
+
+double SignalProcessing::FindMaxFreq(std::vector<double> magnitude,std::vector<double> freq)
+{
+    
     // calculate the frequency with the highest amplitude
     auto max_it = std::max_element(magnitude.begin(), magnitude.end());
     size_t peak_idx = std::distance(magnitude.begin(), max_it);
 
-    return frequencies[peak_idx];
+    return freq[peak_idx];
 }

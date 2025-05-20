@@ -20,8 +20,52 @@
 /*****************************************/
 
 /***********Classes Here*****************/
-Toolbar::Toolbar(QWidget *parent, std::vector<Action> actions) 
-    : QToolBar(parent){
+
+MenuBar::MenuBar(const std::vector<Action*>& actions,QWidget *parent) 
+    : QMenuBar(parent)
+    {
+      SetupActions(actions);  
+    }
+void MenuBar::_AddActionToMenuBar(QAction *action, bool addSeparator) 
+{
+    addAction(action);
+    if (addSeparator) 
+    {
+        this->addSeparator(); // Add a separator if requested
+    }
+}
+
+QAction* MenuBar::_CreateAction(Action &action)
+{
+     // Create a new QAction with the icon and text from the Action object
+     QAction *qAction = new QAction(action.GetQIcon(), action.GetQstring(), this);
+
+    // Set the tooltip to the action's text
+    qAction->setToolTip(action.GetQstring());
+
+    // Connect the QAction's triggered signal to the Action's handler
+    connect(qAction, &QAction::triggered, [&action]() {
+        action.handler(); // Call the handler method of the Action object
+    });
+
+    return qAction;
+}
+
+void MenuBar::SetupActions(const std::vector<Action*>& actions) {
+    for (auto action : actions) 
+    {
+        // Create a QAction from the Action object
+        QAction *qAction = _CreateAction(*action);
+
+        // Add the QAction to the toolbar
+        _AddActionToMenuBar(qAction, action->AddSeparator());
+    }
+}
+
+/* Toolbar implementation*/
+Toolbar::Toolbar(QWidget *parent, const std::vector<Action*>& actions) 
+    : QToolBar(parent)
+    {
       SetupActions(actions);  
     }
 void Toolbar::_AddActionToToolbar(QAction *action, bool addSeparator) 
@@ -38,6 +82,9 @@ QAction* Toolbar::_CreateAction(Action &action)
      // Create a new QAction with the icon and text from the Action object
      QAction *qAction = new QAction(action.GetQIcon(), action.GetQstring(), this);
 
+    // Set the tooltip to the action's text
+    qAction->setToolTip(action.GetQstring());
+
     // Connect the QAction's triggered signal to the Action's handler
     connect(qAction, &QAction::triggered, [&action]() {
         action.handler(); // Call the handler method of the Action object
@@ -46,13 +93,14 @@ QAction* Toolbar::_CreateAction(Action &action)
     return qAction;
 }
 
-void Toolbar::SetupActions(std::vector<Action> actions) {
-    for (auto &action : actions) {
+void Toolbar::SetupActions(const std::vector<Action*>& actions) {
+    for (auto action : actions) 
+    {
         // Create a QAction from the Action object
-        QAction *qAction = _CreateAction(action);
+        QAction *qAction = _CreateAction(*action);
 
         // Add the QAction to the toolbar
-        _AddActionToToolbar(qAction, action.AddSeparator());
+        _AddActionToToolbar(qAction, action->AddSeparator());
     }
 }
 
@@ -79,7 +127,7 @@ bool Action::AddSeparator() {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent){}
 
-void MainWindow::AddMenuBar(QMenuBar *menu)
+void MainWindow::AddMenuBar(MenuBar *menu)
 {
     if (menu != nullptr)
     {
@@ -163,10 +211,20 @@ QLineSeries* GraphChart::addSeries(const std::vector<double> &x, const std::vect
     pen.setWidthF(1.0); // Thinner line
     series->setPen(pen);    
     
+    // Assign a unique color based on the number of series
+    static const QVector<QColor> colors = {
+        Qt::red, Qt::blue, Qt::green, Qt::magenta, Qt::cyan, Qt::darkYellow, Qt::darkRed, Qt::darkBlue
+    };
+    int colorIdx = m_chart->series().size() % colors.size();
+    series->setColor(colors[colorIdx]);
+
+
     /* this is to make all the real points(data) visible*/
     series->setPointsVisible(true);
     m_chart->addSeries(series);
     m_chart->createDefaultAxes();
+    /*hide the legend*/
+    m_chart->legend()->hide();
     
     return series;
 }
@@ -190,6 +248,18 @@ QChartView* GraphChart::chartView()
 {
     return m_chartView;
 }
+
+/* making a plot visible/invisible*/
+void GraphChart::setSeriesVisible(const QString& name, bool visible)
+{
+    for (auto* s : m_chart->series()) {
+        if (s->name() == name) {
+            s->setVisible(visible);
+            break;
+        }
+    }
+}
+
 
 // ChartView constructor: sets up mouse tracking and the vertical line
 ChartView::ChartView(QChart *chart, QWidget *parent)
@@ -302,6 +372,29 @@ void ChartView::updateCursorAndLabel(QMouseEvent *event)
     }
 }
 
+TableWidget::TableWidget(
+    int colCount,
+    std::string headerLabels,
+    bool inDockWidget,
+    QWidget *parent
+) : QTableWidget(0, colCount, parent)
+{
+    // Set headers from comma-separated string
+    QStringList headers = QString::fromStdString(headerLabels).split(',', Qt::SkipEmptyParts);
+    setHorizontalHeaderLabels(headers);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    verticalHeader()->setVisible(false);
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    // Optionally, you can add this widget to a dock widget outside this class
+    // if (inDockWidget) { ... }
+}
+
+void TableWidget::AddRow()
+{
+    int row = rowCount();
+    insertRow(row);
+}
 
 /***********Functions Here*****************/
 

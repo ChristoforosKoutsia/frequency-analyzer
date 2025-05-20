@@ -48,23 +48,23 @@ std::vector<std::string> load_csv_filenames(const std::string& directory) {
 SignalData my_sig_data;
 
 int main(){
-    std::vector <Result> results;
-    std::string current_directory = std::filesystem::current_path().string();
-    CsvHandler my_handler = CsvHandler();
-    SignalProcessing my_signal;
+    // std::vector <Result> results;
+    // std::string current_directory = std::filesystem::current_path().string();
+    // CsvHandler my_handler = CsvHandler();
+    // SignalProcessing my_signal;
     
-    std::vector <std::string> filenames = load_csv_filenames(current_directory);
-    Result result;
-    for (const auto filename : filenames)
-    {
-        my_sig_data = my_handler.parse(filename);
-        double freq = my_signal.calculate_frequency_FFT(my_sig_data.time,my_sig_data.volts);
-        std::cout<<"Frequency " << freq << " and filename "<< filename <<std::endl;
-        result.filename = filename;
-        result.freq = freq;
-        results.push_back(result);
-    }
-    my_handler.write("out.csv",results);
+    // std::vector <std::string> filenames = load_csv_filenames(current_directory);
+    // Result result;
+    // for (const auto filename : filenames)
+    // {
+    //     my_sig_data = my_handler.parse(filename);
+    // double freq = my_signal.calculate_frequency_FFT(my_sig_data.time,my_sig_data.volts);
+    //     std::cout<<"Frequency " << freq << " and filename "<< filename <<std::endl;
+    //     result.filename = filename;
+    //     result.freq = freq;
+    //     results.push_back(result);
+    // }
+    // my_handler.write("out.csv",results);
 
     runGui();
 }

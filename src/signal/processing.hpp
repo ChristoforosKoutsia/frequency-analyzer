@@ -17,7 +17,11 @@
 
 class SignalProcessing{
  public:
-    double calculate_frequency_FFT(const std::vector<double>& time, std::vector<double>& amplitude);
+   /*method that computes and return the spectrum of a time based signal*/
+    std::vector<std::vector<double>> calculate_frequency_FFT(const std::vector<double>& time, std::vector<double>& amplitude);
+
+    /* function that finds the maximum frequency*/
+    double FindMaxFreq(std::vector<double> magnitude,std::vector<double> freq);
 };
 
 #endif
