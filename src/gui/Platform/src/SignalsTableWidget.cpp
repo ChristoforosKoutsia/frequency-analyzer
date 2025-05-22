@@ -2,9 +2,10 @@
 #include <QCheckBox>
 #include <QTableWidgetItem>
 
-SignalsTableWidget::SignalsTableWidget(GraphChart* graph,QWidget* parent)
+SignalsTableWidget::SignalsTableWidget(GraphChart* graph,GraphChart* fft_graph,QWidget* parent)
     : TableWidget(3, "Color,Signal,Show", true, parent),
-      m_graphchart(graph)
+      m_graphchart(graph),
+      m_fftGraphChart(fft_graph)
 {
     // Hide the horizontal header
     horizontalHeader()->setVisible(false);
@@ -44,7 +45,26 @@ void SignalsTableWidget::AddRow(const QColor& color, const QString& name, bool c
     setColumnWidth(0, 14);
 
     /*lambda function slot*/
-QObject::connect(cb, &QCheckBox::toggled, this, [graphchart = m_graphchart, name](bool checked){
-    graphchart->setSeriesVisible(name, checked);
+QObject::connect(cb, &QCheckBox::toggled, this, [this, name](bool checked)
+{
+    /* the checkbox shall control visibility for both time and frequency domain*/
+    // Set visibility in time domain
+    if (m_graphchart) 
+    {
+
+        for (auto* s : m_graphchart->chart()->series()) 
+        {
+            if (s->name() == name) s->setVisible(checked);
+        }
+    }
+    // Set visibility in frequency domain
+    if (m_fftGraphChart) 
+    {
+        for (auto* s : m_fftGraphChart->chart()->series()) 
+        {
+            if (s->name() == name) s->setVisible(checked);
+        }
+    }
 });
+
 }

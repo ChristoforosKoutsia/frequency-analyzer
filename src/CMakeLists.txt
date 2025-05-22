@@ -60,6 +60,19 @@ target_link_libraries(SpectraForge Qt6::Widgets Qt6::Charts ${FFT_LIB} )
      $<TARGET_FILE_DIR:SpectraForge>/libfftw3-3.dll  # Destination path (same directory as executable)
  )
 
+
+# Copy styles folder
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/styles $<TARGET_FILE_DIR:SpectraForge>/styles
+)
+
+# Copy icons folder
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/icons $<TARGET_FILE_DIR:SpectraForge>/icons
+)
+
+
 # Make the application only executable and NOT a console application
 set_target_properties(SpectraForge PROPERTIES WIN32_EXECUTABLE TRUE)
-message("GUI_SOURCES: ${GUI_SOURCES}")

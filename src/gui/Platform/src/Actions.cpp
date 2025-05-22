@@ -24,11 +24,13 @@
 #include <fstream>
 /******************************************************* */
 
+static  std::vector<FFTResult> m_fftResults;
+
 /***********Classes Here*****************/
 
 /* call explicitely the Action constructor*/
 SidebarHomeAction::SidebarHomeAction(QWidget* widget) : 
-                    Action(QApplication::style()->standardIcon(QStyle::SP_DirHomeIcon),
+                    Action(QIcon("icons/home.svg"),
                           "Home",false),
                     m_widget(widget)
                     {}
@@ -43,7 +45,7 @@ void SidebarHomeAction::handler(void)
 }
 
 MenuBarAddSignal::MenuBarAddSignal(QWidget* widget, GraphChart* chartWidget,SignalsTableWidget* tableWidget) : 
-                    Action(QApplication::style()->standardIcon(QStyle::SP_DirIcon),
+                    Action(QIcon("icons/upload.svg"),
                           "Signal",false),
                     m_widget(widget),
                     m_chartWidget(chartWidget),
@@ -53,12 +55,14 @@ MenuBarAddSignal::MenuBarAddSignal(QWidget* widget, GraphChart* chartWidget,Sign
 void MenuBarAddSignal::handler(void)
 {
     if (!m_widget || !m_chartWidget) return;
-    QString fileName = QFileDialog::getOpenFileName(
-        m_widget,
-        "Open CSV File",
-        QString(),
-        "CSV Files (*.csv)"
-    );
+QStringList fileNames = QFileDialog::getOpenFileNames(
+    m_widget,
+    "Open CSV Files",
+    QString(),
+    "CSV Files (*.csv)"
+);
+for (const QString& fileName : fileNames) 
+{
     if (!fileName.isEmpty()) {
         CsvHandler my_handler;
         const std::string loc_filename = fileName.toStdString();
@@ -82,14 +86,16 @@ void MenuBarAddSignal::handler(void)
         }
     }
 }
+}
 
 
 
 
 /* call explicitely the Action constructor*/
-SideBarFFTAction::SideBarFFTAction(QWidget* widget)
-        : Action(QIcon("icons/fft_icon.png"), "FFT", false),
-        m_widget(widget)
+SideBarFFTAction::SideBarFFTAction(GraphChart* graph_widget,TableWidget* table)
+        : Action(QIcon("icons/fft_icon.svg"), "FFT", false),
+        m_graph_widget(graph_widget),
+        m_signals_table(table)
         {
         }
  
@@ -101,16 +107,24 @@ void SideBarFFTAction::handler(void)
      * Then for show signals in the frquency domain, shall be different action/button
     */
 
-    QList<QTableWidgetSelectionRange> selectedRanges = m_signalsTable->selectedRanges();
+    QList<QTableWidgetSelectionRange> selectedRanges = m_signals_table->selectedRanges();
     for (const auto& range : selectedRanges) 
     {
-        for (int row = range.topRow(); row <= range.bottomRow(); ++row) {
-            QString signalName = m_signalsTable->item(row, 1)->text();
-            // Do FFT on this signal
+        for (int row = range.topRow(); row <= range.bottomRow(); ++row) 
+        {
+            QString signalName = m_signals_table->item(row, 1)->text();
+
+            /* perform FFT and store the results*/
+            FFTCalcAndStore(signalName);
         }
     }
+    return;
+}
 
-    QLineSeries* series = findSeriesByName(m_chart, signalName);
+
+void SideBarFFTAction::FFTCalcAndStore(const QString& signalName)
+{
+    QLineSeries* series = findSeriesByName(m_graph_widget, signalName);
     std::vector<double> time_points;
     std::vector<double> ampl_points;
     if (series) 
@@ -127,18 +141,49 @@ void SideBarFFTAction::handler(void)
         const std::vector<double>& frequencies = freq_mag[0];
         const std::vector<double>& magnitudes  = freq_mag[1];
 
-        /* now we have it -- store it in RAM so they can be plotted*/
+        /* store the Color*/
+        QColor color = series->color();
+        /* now we have it -- store it in RAM so they can be plotted later*/
+            FFTResult result;
+            result.signalName = signalName;
+            result.frequencies = frequencies;
+            result.magnitudes = magnitudes;
+            result.color = color;
+            m_fftResults.push_back(result);
     }
-
-
-
-
-    return;
 }
 
+ShowFFTAction::ShowFFTAction(QStackedWidget* stackedWidget, GraphChart* fft_chart)
+                : Action(QIcon("icons/toggle_on"), "Show FFT", false), 
+                m_stackedWidget(stackedWidget),
+                m_fft_graph(fft_chart)
+                {}
 
+void ShowFFTAction::handler()
+{
+    m_fft_graph->clearChart();
+    for (const FFTResult& result : m_fftResults) 
+    {
+        QLineSeries* fft_series = m_fft_graph->addSeries(result.frequencies, result.magnitudes, result.signalName);
+        fft_series->setColor(result.color);
+    }
+    m_fft_graph->setTitle("Frequency Domain (FFT)");
+    m_stackedWidget->setCurrentIndex(1); // Show the FFT chart
+}
 
 
 /***********Functions Here*****************/
 
-
+QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName)
+{
+    // Assuming GraphChart inherits from QChart or has a method to get all series
+    const auto seriesList = graph_widget->chart()->series(); //
+    for (auto* s : seriesList) 
+    {
+        if (s->name() == signalName) 
+        {
+            return qobject_cast<QLineSeries*>(s);
+        }
+    }
+    return nullptr;
+}

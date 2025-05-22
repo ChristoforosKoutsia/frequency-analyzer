@@ -12,23 +12,39 @@ void runGui() {
     int argc = 0; // Dummy argument count
     char *argv[] = {nullptr}; // Dummy argument array
     QApplication app(argc, argv);
-
-
-    // Action homeAction(QIcon(), "Home", false);
-    // Action optionsAction(QIcon(), "Options", false);
-    // Action exitAction(QIcon(), "Exit", true);
-
-    
-
-
-
-    // Create main window
+    app.setWindowIcon(QIcon("icons/icon-wave.ico"));   // If loading from the build directory
+        // Create main window
     MainWindow* mainWindow = new MainWindow();
-    
+
+    /* modern style appearence*/
+    //QApplication::setStyle("Fusion");
+
+    QFile file("styles/modern.qss");
+    if (file.open(QFile::ReadOnly)) 
+    {
+    QString styleSheet = QLatin1String(file.readAll());
+    app.setStyleSheet(styleSheet);
+    }
+
+    GraphChart* chartWidget = new GraphChart();
+    chartWidget->createChart("");
+
+    GraphChart* fftChartWidget = new GraphChart();   // Frequency-domain (FFT)
+    QStackedWidget* stackedWidget = new QStackedWidget();
+    stackedWidget->addWidget(chartWidget);      // index 0: time domain
+    stackedWidget->addWidget(fftChartWidget);   // index 1: frequency domain
+    SignalsTableWidget* signalsTable = new SignalsTableWidget(chartWidget,fftChartWidget,mainWindow);
+
+
+    ShowFFTAction* showFFTAction = new ShowFFTAction(stackedWidget,fftChartWidget);
     SidebarHomeAction* homeAction = new SidebarHomeAction(mainWindow); // pass your main window pointer
-    SideBarFFTAction* fftAction = new SideBarFFTAction(mainWindow); // pass your main window pointer
+    SideBarFFTAction* fftAction = new SideBarFFTAction(chartWidget,signalsTable); // pass your main window pointer
     std::vector<Action*> actions = { homeAction,fftAction};
         // Create toolbar
+   actions.push_back(showFFTAction); 
+    ShowTimeDomainAction* showTimeAction = new ShowTimeDomainAction(stackedWidget);
+    actions.push_back(showTimeAction);
+
     Toolbar* toolbar = new Toolbar(nullptr, actions);
 
 
@@ -40,16 +56,14 @@ void runGui() {
     mainWindow->addToolBar(Qt::LeftToolBarArea, toolbar);
 
 
-    // Create chart widget and plot the first signal
-    GraphChart* chartWidget = new GraphChart();
-    chartWidget->createChart("First Signal");
 
-    /* copy the data to show e.g first signal for now*/
-    const SignalData loc_sig = my_sig_data;
 
-    if (!loc_sig.time.empty() && !loc_sig.volts.empty()) {
-        chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, "Signal 1");
-    }
+    // /* copy the data to show e.g first signal for now*/
+    // const SignalData loc_sig = my_sig_data;
+
+    // if (!loc_sig.time.empty() && !loc_sig.volts.empty()) {
+    //     chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, "Signal 1");
+    // }
 
     // /* make main Signal Plot to be floatable*/
     // QDockWidget* graphDock = new QDockWidget("Signal Plot", mainWindow);
@@ -62,7 +76,6 @@ void runGui() {
 
     mainWindow->resize(1200, 800); // or any size you prefer
 
-    SignalsTableWidget* signalsTable = new SignalsTableWidget(chartWidget,mainWindow);
 
     MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable); // pass your main window pointer
     std::vector<Action*> menubar_actions = {addsignalAction};
@@ -73,7 +86,7 @@ void runGui() {
 
 QSplitter* splitter = new QSplitter(Qt::Horizontal);
 splitter->addWidget(signalsTable);   // Table on the left
-splitter->addWidget(chartWidget);    // Chart on the right
+splitter->addWidget(stackedWidget);    // Chart on the right
 
 // Set initial sizes: table smaller, chart larger
 QList<int> sizes;

@@ -173,8 +173,9 @@ GraphChart::GraphChart(QWidget *parent)
     /* Add data label to printout the cursor values*/
     m_dataLabel = new DataLabel(this);
     m_dataLabel->setMinimumHeight(24);
-    m_dataLabel->setStyleSheet("background: white; border: 1px solid gray; padding: 2px;");
-    
+
+    /* this datalabel property shall be used in the stylesheet for styling*/
+    m_dataLabel->setObjectName("dataLabel");    
     /* set the data to chartview*/
     m_chartView->setDataLabel(m_dataLabel);
 
