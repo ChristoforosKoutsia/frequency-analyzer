@@ -44,7 +44,7 @@ SignalData CsvHandler::parse(const std::string& in_filename){
 // Assumes that csvs are two directories back
 SignalData sig = SignalData();
 sig.filename = in_filename;
-std::string full_path = "../../" + in_filename;
+std::string full_path = in_filename;
 std::ifstream inFile(full_path);
  if (!inFile.is_open()) {
     throw std::runtime_error("Error: Could not open file  for reading.\n");

@@ -30,4 +30,7 @@ struct Result{
 std::string filename;
 double freq;
 };
+
+/*public variable*/
+extern SignalData my_sig_data;
 #endif
