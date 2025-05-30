@@ -1,0 +1,5 @@
+module QmlTime
+typeinfo qmltime.qmltypes
+depends QtQuick
+prefer :/qt-project.org/imports/QmlTime/
+
