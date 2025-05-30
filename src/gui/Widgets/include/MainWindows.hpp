@@ -9,7 +9,6 @@
 #ifndef MAINWINDOWS_HPP
 #define MAINWINDOWS_HPP
 
-/***********Includes Here*****************/
 #include <QToolBar>
 #include <QAction>
 #include <QObject>
@@ -26,213 +25,115 @@
 #include <vector>
 
 
-/*****************************************/
+/**
+* @brief Here an abstraction layer is implemented with general Widgets
+* This abstraction layer shall be used eventually in Platform folder
+* Where all the project-specific details and the supported functionality is there
+* All the classes implemented here shall be abstract and no object of them shall be
+* initialized.
+* 
+*/
 
-/***********Macros Here*****************/
-
-
-/*****************************************/
-
-/***********Class Declaration Here*****************/
-
-/* QLabel declaration*/
-
-class DataLabel : public QLabel
+/* Base class for DataLabel */
+class BaseDataLabel : public QLabel
 {
     Q_OBJECT
 public:
-    explicit DataLabel(QWidget *parent = nullptr)
-        : QLabel(parent) {}
-
-    // Set the data to display (default: x/y)
-    void setData(double x, double y) {
-        setText(QString("X: %1\nY: %2").arg(x).arg(y));
-    }
-
-    // Set custom text
-    void setData(const QString& text) {
-        setText(text);
-    }
-
-    // Clear the label
-    void clearData() {
-        setText("");
-    }
+    explicit BaseDataLabel(QWidget *parent = nullptr) : QLabel(parent) {}
+    virtual void setData(double x, double y) = 0;
+    virtual void setData(const QString& text) = 0;
+    virtual void clearData() = 0;
 };
 
-
-/* This class does not really belongs here. We should move it around*/
-class Action
-{
-    /*class that provides all the information needed 
-     for creating an Action. Provides a handler to handle
-     and action as well but does not create an action itself*/
-    public : 
-        explicit Action(const QIcon & ,
-                        const QString & ,
-                        bool addSeparator
-                    );
-
-        /* handler for each specific action*/
-        virtual void handler(void);
-        QIcon GetQIcon();
-        QString GetQstring();
-        bool AddSeparator();        
-    private :
-       QIcon m_qicon;
-       QString m_qstring;
-       bool m_add_separator;
-};
-
-
-/* Create custom Menubar*/
-class MenuBar : public QMenuBar
-{
+class BaseAction : public QAction {
     Q_OBJECT
-
 public:
-    explicit MenuBar(const std::vector<Action*>& actions,QWidget *parent = nullptr);
+    BaseAction(const QIcon &icon, const QString &text, bool addSeparator, QObject *parent = nullptr)
+        : QAction(icon, text, parent), m_add_separator(addSeparator)
+    {
+        setToolTip(text);
+        connect(this, &QAction::triggered, this, &BaseAction::handler);
+    }
 
-    /*Setup all actions existing in the buffer*/
-    void SetupActions(const std::vector<Action*>& actions);
+    virtual void handler() = 0;
+    bool AddSeparator() const { return m_add_separator; }
 
 private:
-
-    /* Creating a new QAction*/
-    QAction* _CreateAction(Action &action);
-    
-    void _AddActionToMenuBar(QAction *action, bool addSeparator = false);
-
-    /*Helper function to connect an action to a signal */
-    void _ConnectAction(QAction *action, const QString &actionName, void (Action::*handler)());
-    
+    bool m_add_separator;
 };
 
-
-
-
-class Toolbar : public QToolBar 
+/* Base class for MenuBar */
+class BaseMenuBar : public QMenuBar
 {
     Q_OBJECT
-
 public:
-    explicit Toolbar(QWidget *parent,const std::vector<Action*>& actions);
-
-    /*Setup all actions existing in the buffer*/
-    void SetupActions(const std::vector<Action*>& actions);
-
-private:
-
-    /* Creating a new QAction*/
-    QAction* _CreateAction(Action &action);
-    
-    void _AddActionToToolbar(QAction *action, bool addSeparator = false);
-
-    /*Helper function to connect an action to a signal */
-    void _ConnectAction(QAction *action, const QString &actionName, void (Action::*handler)());
-    
+    explicit BaseMenuBar(const std::vector<BaseAction*>& actions, QWidget *parent = nullptr);
+    void SetupActions(const std::vector<BaseAction*>& actions);
 };
 
-
-
-/*****************************************/
-class MainWindow : public QMainWindow
+/* Base class for Toolbar */
+class BaseToolbar : public QToolBar
 {
     Q_OBJECT
-
-public :
-    explicit MainWindow(QWidget *parent = nullptr);
-    void AddMenuBar(MenuBar* menu);
-    void AddToolbar(Toolbar *toolbar);
-    /* central widget could be whatever widget*/
-    void AddCentralWidget(QWidget *widget);
-    void AddTableWidget(QTableWidget *table);
-
-};
-
-
-/* class to create features on the plot like mouse Events 
- and cursor feature to capture data*/
-class ChartView : public QChartView
-{
-    Q_OBJECT
-
 public:
-    explicit ChartView(QChart *chart, QWidget *parent = nullptr);
-    void setDataLabel(DataLabel* label) { m_dataLabel = label; }
+    explicit BaseToolbar(QWidget *parent, const std::vector<BaseAction*>& actions);
+    void SetupActions(const std::vector<BaseAction*>& actions);
+};
 
+/* Base class for MainWindow */
+class BaseMainWindow : public QMainWindow
+{
+    Q_OBJECT
+public:
+    explicit BaseMainWindow(QWidget *parent = nullptr) : QMainWindow(parent) {}
+    virtual void AddMenuBar(BaseMenuBar* menu) = 0;
+    virtual void AddToolbar(BaseToolbar *toolbar) = 0;
+    virtual void AddCentralWidget(QWidget *widget) = 0;
+    virtual void AddTableWidget(QTableWidget *table) = 0;
+};
+
+/* Base class for ChartView */
+class BaseChartView : public QChartView
+{
+    Q_OBJECT
+public:
+    explicit BaseChartView(QChart *chart, QWidget *parent = nullptr) : QChartView(chart, parent) {}
+    virtual void setDataLabel(BaseDataLabel* label) = 0;
 protected:
-   /* This methods are overriden in order to develop the cursor feature*/
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void leaveEvent(QEvent *event) override;
-
-    /* We will override wheelEvent to implement zoom in/out with the scrollbar*/
-    void wheelEvent(QWheelEvent *event) override;
-
-    /* we can add some callback functions on keypressEvent*/
-    void keyPressEvent(QKeyEvent *event) override;
-
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
-
-    void mousePressEvent(QMouseEvent *event) override;
-
-private:
-    QGraphicsLineItem *m_vLine = nullptr;
-
-    /* create data label at the bottom to track the data value*/
-    DataLabel* m_dataLabel = nullptr;
-
-    /* lock functionality so the cursor can be locked to a specific point*/
-    bool m_cursorLocked = false;
-    QPoint m_lockedPos;
-
-    void updateCursorAndLabel(QMouseEvent *event);
-
-
+    virtual void mouseMoveEvent(QMouseEvent *event) override = 0;
+    virtual void leaveEvent(QEvent *event) override = 0;
+    virtual void wheelEvent(QWheelEvent *event) override = 0;
+    virtual void keyPressEvent(QKeyEvent *event) override = 0;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) override = 0;
+    virtual void mousePressEvent(QMouseEvent *event) override = 0;
 };
 
-
-
-class GraphChart : public QWidget
+/* Base class for GraphChart */
+class BaseGraphChart : public QWidget
 {
     Q_OBJECT
-
 public:
-    explicit GraphChart(QWidget *parent = nullptr);
-
-    void createChart(const QString &title = "Signals");
-    QLineSeries* addSeries(const std::vector<double> &x, const std::vector<double> &y, const QString &seriesName = "Series");
-    void clearChart();
-    void setTitle(const QString &title);
-    
-
-    QChart* chart();
-    QChartView* chartView();
-public slots:
-    /*we need to toggle the visibility - based on handlers*/
-    void setSeriesVisible(const QString& name, bool visible);
-private:
-    QChart *m_chart;
-    ChartView *m_chartView;
-    DataLabel *m_dataLabel;
+    explicit BaseGraphChart(QWidget *parent = nullptr) : QWidget(parent) {}
+    virtual void createChart(const QString &title = "Signals") = 0;
+    virtual QLineSeries* addSeries(const std::vector<double> &x, const std::vector<double> &y, const QString &seriesName = "Series") = 0;
+    virtual void clearChart() = 0;
+    virtual void setTitle(const QString &title) = 0;
+    virtual QChart* chart() = 0;
+    virtual QChartView* chartView() = 0;
+    virtual void setSeriesVisible(const QString& name, bool visible) = 0;
 };
 
-/* abstract class for TableWiget. It will be used mainly for signals representation*/
-class TableWidget : public QTableWidget
+/* Base class for TableWidget */
+class BaseTableWidget : public QTableWidget
 {
     Q_OBJECT
-
-public :
-    /*TableWIdget shall know how many */
-    explicit TableWidget(
+public:
+    explicit BaseTableWidget(
         int colCount,
-        std::string headerLabels,
-        bool inDockWIdget = false,
-        QWidget *parent = nullptr
-);
-
-    /*add new row*/
-    virtual void AddRow();
+        QWidget *parent = nullptr,
+        int row = 0
+    ) : QTableWidget(row,colCount,parent) {}
+     virtual void AddRow() = 0;
 };
 
 #endif // MAINWINDOWS_HPP

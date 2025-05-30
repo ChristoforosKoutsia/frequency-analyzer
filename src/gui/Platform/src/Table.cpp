@@ -1,6 +1,42 @@
-#include "SignalsTableWidget.hpp"
+/****************************
+ * File: Table.cpp
+ * Author: Chris Koutsia
+ * Date: 2025-05-28
+ * Licensed under the MIT License. See LICENSE file for details.
+ * Description: Description of the file
+ ****************************/
+
+/***********Includes Here*****************/
+#include "Table.hpp"
 #include <QCheckBox>
 #include <QTableWidgetItem>
+
+/*****************************************/
+
+
+/***********Classes Here*****************/
+TableWidget::TableWidget(
+    int colCount,
+    std::string headerLabels,
+    bool inDockWidget,
+    QWidget *parent
+) : BaseTableWidget(colCount, parent)
+{
+    // Set headers from comma-separated string
+    QStringList headers = QString::fromStdString(headerLabels).split(',', Qt::SkipEmptyParts);
+    setHorizontalHeaderLabels(headers);
+    horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    verticalHeader()->setVisible(false);
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+}
+
+void TableWidget::AddRow()
+{
+    int row = rowCount();
+    insertRow(row);
+}
+
 
 SignalsTableWidget::SignalsTableWidget(GraphChart* graph,GraphChart* fft_graph,QWidget* parent)
     : TableWidget(3, "Color,Signal,Show", true, parent),
@@ -68,3 +104,7 @@ QObject::connect(cb, &QCheckBox::toggled, this, [this, name](bool checked)
 });
 
 }
+
+/***********Functions Here*****************/
+
+
