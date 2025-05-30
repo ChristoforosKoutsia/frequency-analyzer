@@ -6,19 +6,18 @@
 #include "common.hpp"
 #include <QDockWidget>
 #include "Actions.hpp"
-#include "SignalsTableWidget.hpp"
+#include "Table.hpp"
+#include "MenuBar.hpp"
+#include "GraphChart.hpp"
+#include "CentralWindows.hpp"
 
 void runGui() {
     int argc = 0; // Dummy argument count
     char *argv[] = {nullptr}; // Dummy argument array
     QApplication app(argc, argv);
-    app.setWindowIcon(QIcon("icons/icon-wave.ico"));   // If loading from the build directory
-        // Create main window
-    MainWindow* mainWindow = new MainWindow();
+    app.setWindowIcon(QIcon("icons/icon-wave.ico"));
 
-    /* modern style appearence*/
-    //QApplication::setStyle("Fusion");
-
+    /* apply style to the app*/
     QFile file("styles/modern.qss");
     if (file.open(QFile::ReadOnly)) 
     {
@@ -26,59 +25,45 @@ void runGui() {
     app.setStyleSheet(styleSheet);
     }
 
-    GraphChart* chartWidget = new GraphChart();
-    chartWidget->createChart("");
+    /* start with creating the main window - this will be the parent of all other widgets*/
+    MainWindow* mainWindow = new MainWindow();
 
-    GraphChart* fftChartWidget = new GraphChart();   // Frequency-domain (FFT)
-    QStackedWidget* stackedWidget = new QStackedWidget();
+    /* create the Charts which will be the main display of MainWindow
+     * THere will be eventually two charts, one for the time domain and one
+     * for the frequency domain
+     */
+    GraphChart* chartWidget = new GraphChart(mainWindow);
+    chartWidget->createChart("Signals Chart");
+
+    GraphChart* fftChartWidget = new GraphChart(mainWindow);   // Frequency-domain (FFT)
+    /* the two new graphs will be part of stacked widgets so we can display one every time*/
+    QStackedWidget* stackedWidget = new QStackedWidget(mainWindow);
     stackedWidget->addWidget(chartWidget);      // index 0: time domain
     stackedWidget->addWidget(fftChartWidget);   // index 1: frequency domain
+
+    /* create the table that will display the signals along with their color and a checkbox 
+     * so any signal can be displayed at a time*/
     SignalsTableWidget* signalsTable = new SignalsTableWidget(chartWidget,fftChartWidget,mainWindow);
 
-
+    /* Assing all the Actions. The actions are the options that the user have (the "buttons")
+     * each action has a specific handler that will be executed when they are pressed */
     ShowFFTAction* showFFTAction = new ShowFFTAction(stackedWidget,fftChartWidget);
     SidebarHomeAction* homeAction = new SidebarHomeAction(mainWindow); // pass your main window pointer
     SideBarFFTAction* fftAction = new SideBarFFTAction(chartWidget,signalsTable); // pass your main window pointer
-    std::vector<Action*> actions = { homeAction,fftAction};
-        // Create toolbar
-   actions.push_back(showFFTAction); 
     ShowTimeDomainAction* showTimeAction = new ShowTimeDomainAction(stackedWidget);
-    actions.push_back(showTimeAction);
-
-    Toolbar* toolbar = new Toolbar(nullptr, actions);
+    std::vector<BaseAction*> actions = { homeAction,fftAction,showFFTAction,showTimeAction};
+    ToolBar* toolbar = new ToolBar(mainWindow, actions);
 
 
     // Add toolbar to the left
     /*When we use addToolBar and setCentralWidget, Qt automatically sets the parent of 
-    toolbar and chartWidget to mainWindow. So we do not need to
-    pass mainWindow as the parent in the constructors in this case, 
-    because these methods will set the parent for use.*/
+    toolbar and chartWidget to mainWindow. We have passed it explicitely
+     as parent as the contructor as well*/
     mainWindow->addToolBar(Qt::LeftToolBarArea, toolbar);
 
-
-
-
-    // /* copy the data to show e.g first signal for now*/
-    // const SignalData loc_sig = my_sig_data;
-
-    // if (!loc_sig.time.empty() && !loc_sig.volts.empty()) {
-    //     chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, "Signal 1");
-    // }
-
-    // /* make main Signal Plot to be floatable*/
-    // QDockWidget* graphDock = new QDockWidget("Signal Plot", mainWindow);
-    // graphDock->setWidget(chartWidget);
-    // graphDock->setFloating(false); // Start docked, but user can float it
-    // graphDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-    // mainWindow->addDockWidget(Qt::RightDockWidgetArea, graphDock);
-
-
-
-    mainWindow->resize(1200, 800); // or any size you prefer
-
-
-    MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable); // pass your main window pointer
-    std::vector<Action*> menubar_actions = {addsignalAction};
+    /* add the menubar with its actions*/
+    MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable);
+    std::vector<BaseAction*> menubar_actions = {addsignalAction};
     MenuBar* menubar = new MenuBar(menubar_actions);
     /* Add the menuBar */
     mainWindow->setMenuBar(menubar);
@@ -93,8 +78,10 @@ QList<int> sizes;
 sizes << 150 << 1000; // Adjust as needed (table width, chart width)
 splitter->setSizes(sizes);
 
+/* resize the Window for better overview*/
+mainWindow->resize(1200, 800); // or any size you prefer
 mainWindow->setCentralWidget(splitter);
 mainWindow->show();
 
-    app.exec();
+app.exec();
 }

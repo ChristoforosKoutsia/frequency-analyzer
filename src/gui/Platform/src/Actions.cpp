@@ -11,8 +11,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-
-/******************************** to be removed in a while*************8*/
 #include <iostream>
 #include <vector>
 #include <string>
@@ -22,6 +20,8 @@
 #include "signal/processing.hpp"
 #include "common.hpp"
 #include <fstream>
+#include "GraphChart.hpp"
+#include "MenuBar.hpp"
 /******************************************************* */
 
 static  std::vector<FFTResult> m_fftResults;
@@ -30,8 +30,8 @@ static  std::vector<FFTResult> m_fftResults;
 
 /* call explicitely the Action constructor*/
 SidebarHomeAction::SidebarHomeAction(QWidget* widget) : 
-                    Action(QIcon("icons/home.svg"),
-                          "Home",false),
+                    BaseAction(QIcon("icons/home.svg"),
+                          "Home",false,widget),
                     m_widget(widget)
                     {}
  
@@ -45,8 +45,8 @@ void SidebarHomeAction::handler(void)
 }
 
 MenuBarAddSignal::MenuBarAddSignal(QWidget* widget, GraphChart* chartWidget,SignalsTableWidget* tableWidget) : 
-                    Action(QIcon("icons/upload.svg"),
-                          "Signal",false),
+                    BaseAction(QIcon("icons/upload.svg"),
+                          "Signal",false,widget),
                     m_widget(widget),
                     m_chartWidget(chartWidget),
                     m_tableWidget(tableWidget)
@@ -89,11 +89,9 @@ for (const QString& fileName : fileNames)
 }
 
 
-
-
 /* call explicitely the Action constructor*/
 SideBarFFTAction::SideBarFFTAction(GraphChart* graph_widget,TableWidget* table)
-        : Action(QIcon("icons/fft_icon.svg"), "FFT", false),
+        : BaseAction(QIcon("icons/fft_icon.svg"), "FFT", false,graph_widget),
         m_graph_widget(graph_widget),
         m_signals_table(table)
         {
@@ -154,7 +152,7 @@ void SideBarFFTAction::FFTCalcAndStore(const QString& signalName)
 }
 
 ShowFFTAction::ShowFFTAction(QStackedWidget* stackedWidget, GraphChart* fft_chart)
-                : Action(QIcon("icons/toggle_on"), "Show FFT", false), 
+                : BaseAction(QIcon("icons/toggle_on"), "Show FFT", false), 
                 m_stackedWidget(stackedWidget),
                 m_fft_graph(fft_chart)
                 {}

@@ -23,9 +23,8 @@
 
 /***********Includes Here*****************/
 #include "MainWindows.hpp"
-#include "SignalsTableWidget.hpp"
-
-
+#include "MenuBar.hpp"
+#include "Table.hpp"
 /*****************************************/
 
 
@@ -40,12 +39,10 @@ struct FFTResult
     QColor color;
 };
 
-
-
 /*****************************************/
 
 /***********Class Declaration Here*****************/
-class SidebarHomeAction : public Action
+class SidebarHomeAction : public BaseAction
 {
     public:
         explicit SidebarHomeAction(QWidget* widget);
@@ -57,10 +54,13 @@ class SidebarHomeAction : public Action
 };
 
 /*Add signal action. This action opens WindowExplorer*/
-class MenuBarAddSignal : public Action
+class MenuBarAddSignal : public BaseAction
 {
     public:
-        explicit MenuBarAddSignal(QWidget* widget, GraphChart* chartWidget,SignalsTableWidget* tableWidget);
+        explicit MenuBarAddSignal(QWidget* widget,
+                                  GraphChart* chartWidget,
+                                  SignalsTableWidget* tableWidget
+                                  );
         void handler(void) override;
     private:
         /* Define hete the Icon*/
@@ -75,7 +75,7 @@ class MenuBarAddSignal : public Action
 
 /*create an action where for the selected signal performs FFT
  and plots the Signal in the frequency domain*/
-class SideBarFFTAction : public Action
+class SideBarFFTAction : public BaseAction
 {
     public:
         explicit SideBarFFTAction(GraphChart* graph_widget,TableWidget* table);
@@ -89,7 +89,7 @@ class SideBarFFTAction : public Action
         TableWidget* m_signals_table;
 };
 
-class ShowFFTAction : public Action
+class ShowFFTAction : public BaseAction
 {
 public:
     ShowFFTAction(QStackedWidget* stackedWidget, GraphChart* fft_chart);
@@ -101,10 +101,10 @@ private:
 
 
 // In Actions.hpp
-class ShowTimeDomainAction : public Action {
+class ShowTimeDomainAction : public BaseAction {
 public:
     ShowTimeDomainAction(QStackedWidget* stackedWidget)
-        : Action(QIcon(), "Show Time Domain", false), m_stackedWidget(stackedWidget) {}
+        : BaseAction(QIcon(), "Show Time Domain", false,stackedWidget), m_stackedWidget(stackedWidget) {}
     void handler() override {
         if (m_stackedWidget) m_stackedWidget->setCurrentIndex(0); // Show time domain chart
     }
