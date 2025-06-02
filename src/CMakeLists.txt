@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION  3.13)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-set(CMAKE_PREFIX_PATH "C:/Qt/6.8.3/mingw_64")
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/lib/cmake")
 
 project(SpectraForge VERSION 1.0)
 
@@ -71,6 +71,46 @@ add_custom_command(TARGET SpectraForge POST_BUILD
 add_custom_command(TARGET SpectraForge POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/icons $<TARGET_FILE_DIR:SpectraForge>/icons
+)
+
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Core.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6Core.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Widgets.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6Widgets.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Gui.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6Gui.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Charts.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6Charts.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6OpenGL.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6OpenGL.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6OpenGLWidgets.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6OpenGLWidgets.dll
+)
+
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/plugins/platforms"
+    "$<TARGET_FILE_DIR:SpectraForge>/platforms"
+)
+
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/plugins/imageformats"
+    "$<TARGET_FILE_DIR:SpectraForge>/imageformats"
+)
+
+
+add_custom_command(TARGET SpectraForge POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Svg.dll"
+    $<TARGET_FILE_DIR:SpectraForge>/Qt6Svg.dll
 )
 
 

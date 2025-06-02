@@ -30,7 +30,7 @@ static  std::vector<FFTResult> m_fftResults;
 
 /* call explicitely the Action constructor*/
 SidebarHomeAction::SidebarHomeAction(QWidget* widget) : 
-                    BaseAction(QIcon("icons/home.svg"),
+                    BaseAction(QIcon("icons/home_1.png"),
                           "Home",false,widget),
                     m_widget(widget)
                     {}

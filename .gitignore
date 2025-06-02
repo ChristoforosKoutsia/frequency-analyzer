@@ -33,4 +33,4 @@
 *.csv
 
 # Ignore 3rdparty Qt folder
-#src/3rdparty/Qt/
+src/3rdparty/Qt/

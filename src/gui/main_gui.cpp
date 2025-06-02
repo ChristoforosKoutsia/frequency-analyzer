@@ -15,7 +15,11 @@ void runGui() {
     int argc = 0; // Dummy argument count
     char *argv[] = {nullptr}; // Dummy argument array
     QApplication app(argc, argv);
-    app.setWindowIcon(QIcon("icons/icon-wave.ico"));
+    //app.setWindowIcon(QIcon("icons/icon-wave.ico"));
+    QIcon icon("icons/surfing.svg");
+
+    app.setWindowIcon(icon);
+    
 
     /* apply style to the app*/
     QFile file("styles/modern.qss");
