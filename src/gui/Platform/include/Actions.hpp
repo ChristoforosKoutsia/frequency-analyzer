@@ -101,7 +101,8 @@ private:
 
 
 // In Actions.hpp
-class ShowTimeDomainAction : public BaseAction {
+class ShowTimeDomainAction : public BaseAction 
+{
 public:
     ShowTimeDomainAction(QStackedWidget* stackedWidget)
         : BaseAction(QIcon(), "Show Time Domain", false,stackedWidget), m_stackedWidget(stackedWidget) {}
@@ -112,6 +113,20 @@ private:
     QStackedWidget* m_stackedWidget;
 };
 
+
+class ShowCursorAction : public BaseAction
+{
+    /* This is an action to show the cursor.
+     * There wil be two cursors to choose from
+     * As inputs we want the graph where the cursor
+     * shall appear, the layout (to position the datalabel)
+     */
+public:
+    ShowCursorAction(ChartView* chart_view);
+    void handler() override ;
+private:
+    ChartView* m_chart_view;
+};
 
 
 /* Utility Funtions here ... To be refactored */

@@ -169,12 +169,34 @@ void ShowFFTAction::handler()
     m_stackedWidget->setCurrentIndex(1); // Show the FFT chart
 }
 
+ShowCursorAction :: ShowCursorAction(ChartView* chart_view)
+                    : BaseAction(QIcon("icons/toggle_on"), "Show Cursor", false),
+                    m_chart_view(chart_view)
+                    {}
+void ShowCursorAction::handler()
+{
+    if (m_chart_view) 
+    {
+        if (!m_chart_view->isCursorEnabled())
+        {
+            m_chart_view->setCursorEnabled(true);
+        }
+        else 
+        {
+            m_chart_view->setCursorEnabled(false);
+        }
+        m_chart_view->update(); // Refresh the view to show/hide the cursor
+        
+    }
+}
+
+
 
 /***********Functions Here*****************/
 
 QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName)
 {
-    // Assuming GraphChart inherits from QChart or has a method to get all series
+    // GraphChart inherits from QChart or has a method to get all series
     const auto seriesList = graph_widget->chart()->series(); //
     for (auto* s : seriesList) 
     {

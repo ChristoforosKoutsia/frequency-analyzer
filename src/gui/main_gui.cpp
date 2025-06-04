@@ -55,19 +55,32 @@ void runGui() {
     SidebarHomeAction* homeAction = new SidebarHomeAction(mainWindow); // pass your main window pointer
     SideBarFFTAction* fftAction = new SideBarFFTAction(chartWidget,signalsTable); // pass your main window pointer
     ShowTimeDomainAction* showTimeAction = new ShowTimeDomainAction(stackedWidget);
-    std::vector<BaseAction*> actions = { homeAction,fftAction,showFFTAction,showTimeAction};
-    ToolBar* toolbar = new ToolBar(mainWindow, actions);
+    ChartView* timeDomainChartView = static_cast<ChartView*>(chartWidget->chartView());
+    ShowCursorAction* cursorAction = new ShowCursorAction(timeDomainChartView);
+    std::vector<BaseAction*> actions = { 
+                                        homeAction,
+                                        fftAction,
+                                        showFFTAction,
+                                        showTimeAction,
+                                        cursorAction
+                                       };
+    //ToolBar* toolbar = new ToolBar(mainWindow, actions);
 
 
     // Add toolbar to the left
     /*When we use addToolBar and setCentralWidget, Qt automatically sets the parent of 
     toolbar and chartWidget to mainWindow. We have passed it explicitely
      as parent as the contructor as well*/
-    mainWindow->addToolBar(Qt::LeftToolBarArea, toolbar);
+    //mainWindow->addToolBar(Qt::LeftToolBarArea, toolbar);
 
     /* add the menubar with its actions*/
     MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable);
-    std::vector<BaseAction*> menubar_actions = {addsignalAction};
+    std::vector<BaseAction*> menubar_actions = {addsignalAction,
+                                            homeAction,
+                                        fftAction,
+                                        showFFTAction,
+                                        showTimeAction,
+                                        cursorAction};
     MenuBar* menubar = new MenuBar(menubar_actions);
     /* Add the menuBar */
     mainWindow->setMenuBar(menubar);

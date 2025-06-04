@@ -19,9 +19,15 @@
 
 
 ChartView::ChartView(QChart *chart, QWidget *parent)
-    : BaseChartView(chart, parent), m_dataLabel(nullptr), m_cursorLocked(false)
+    : BaseChartView(chart, parent), 
+                m_dataLabel(nullptr), 
+                m_cursorLocked(false),
+                m_cursorLine(nullptr)
+
 {
     setMouseTracking(true);
+
+
 }
 
 void ChartView::setDataLabel(BaseDataLabel* label)
@@ -29,11 +35,18 @@ void ChartView::setDataLabel(BaseDataLabel* label)
      m_dataLabel = static_cast<DataLabel*>(label);
 }
 
-void ChartView::mouseMoveEvent(QMouseEvent *event)
-{
-    if (!m_cursorLocked && m_dataLabel) {
-        QPointF chartPos = chart()->mapToValue(event->pos());
-        m_dataLabel->setData(chartPos.x(), chartPos.y());
+void ChartView::mouseMoveEvent(QMouseEvent* event) {
+        if (m_cursorEnabled) {
+        if (m_draggingCursor) {
+            QPointF pos = chart()->mapToValue(event->pos());
+            setCursorPosition(pos.x());
+        } else {
+            if (isMouseNearCursor(event->pos())) {
+                setCursor(Qt::SizeHorCursor); // Change to horizontal resize cursor
+            } else {
+                unsetCursor();
+            }
+        }
     }
     QChartView::mouseMoveEvent(event);
 }
@@ -59,18 +72,90 @@ void ChartView::mouseDoubleClickEvent(QMouseEvent *event)
     QChartView::mouseDoubleClickEvent(event);
 }
 
-void ChartView::mousePressEvent(QMouseEvent *event)
+void ChartView::mousePressEvent(QMouseEvent* event) {
+    if (m_cursorEnabled && isMouseNearCursor(event->pos())) {
+        m_draggingCursor = true;
+        setRubberBand(QChartView::NoRubberBand); // Disable zoom while dragging
+    }
+    QChartView::mousePressEvent(event);
+}
+
+void ChartView::resizeEvent(QResizeEvent* event)
 {
-    if (event->button() == Qt::LeftButton) {
-        m_cursorLocked = !m_cursorLocked;
-        event->accept();
-    } 
-    else 
-    {
-        QChartView::mousePressEvent(event);
+    QChartView::resizeEvent(event);
+    updateCursorLine();
+}
+
+
+void ChartView::setCursorEnabled(bool enabled) 
+{
+    m_cursorEnabled = enabled;
+    if (enabled) {
+        if (!m_cursorLine) {
+            m_cursorLine = new QGraphicsLineItem();
+            m_cursorLine->setPen(QPen(QColor(255, 0, 255), 2));
+            chart()->scene()->addItem(m_cursorLine);
+        }
+        updateCursorLine();
+    } else {
+        if (m_cursorLine) {
+            chart()->scene()->removeItem(m_cursorLine);
+            delete m_cursorLine;
+            m_cursorLine = nullptr;
+        }
     }
 }
 
+void ChartView::setCursorPosition(qreal x) 
+{
+    QValueAxis* xAxis = qobject_cast<QValueAxis*>(chart()->axisX());
+    if (xAxis) {
+        if (x < xAxis->min()) x = xAxis->min();
+        if (x > xAxis->max()) x = xAxis->max();
+    }
+    m_cursorX = x;
+    updateCursorLine();
+    update();
+}
+
+qreal ChartView::cursorPosition() const 
+{
+    return m_cursorX;
+}
+
+void ChartView::mouseReleaseEvent(QMouseEvent* event) {
+    m_draggingCursor = false;
+    setRubberBand(QChartView::RectangleRubberBand); // Restore zoom after dragging
+    QChartView::mouseReleaseEvent(event);
+}
+void ChartView::paintEvent(QPaintEvent* event) 
+{
+    QChartView::paintEvent(event);
+        
+}
+
+
+bool ChartView::isMouseNearCursor(const QPoint &mousePos) const {
+    QValueAxis* yAxis = qobject_cast<QValueAxis*>(chart()->axisY());
+    QValueAxis* xAxis = qobject_cast<QValueAxis*>(chart()->axisX());
+    if (!xAxis || !yAxis) return false;
+    QPointF cursorScene = chart()->mapToPosition(QPointF(m_cursorX, yAxis->min()),nullptr);
+    return std::abs(mousePos.x() - cursorScene.x()) < 6; // 6 pixels threshold
+}
+
+
+void ChartView::updateCursorLine() {
+    if (!m_cursorLine) return;
+    QValueAxis* xAxis = qobject_cast<QValueAxis*>(chart()->axisX());
+    QValueAxis* yAxis = qobject_cast<QValueAxis*>(chart()->axisY());
+    if (!xAxis || !yAxis) return;
+    qreal x = m_cursorX;
+    if (x < xAxis->min()) x = xAxis->min();
+    if (x > xAxis->max()) x = xAxis->max();
+    QPointF top = chart()->mapToPosition(QPointF(x, yAxis->max()));
+    QPointF bottom = chart()->mapToPosition(QPointF(x, yAxis->min()));
+    m_cursorLine->setLine(QLineF(top, bottom));
+}
 
 GraphChart::GraphChart(QWidget *parent)
     : BaseGraphChart(parent)
@@ -95,7 +180,8 @@ GraphChart::GraphChart(QWidget *parent)
     m_dataLabel->setMinimumHeight(24);
 
     /* this datalabel property shall be used in the stylesheet for styling*/
-    m_dataLabel->setObjectName("dataLabel");    
+    m_dataLabel->setObjectName("dataLabel");
+
     /* set the data to chartview*/
     m_chartView->setDataLabel(m_dataLabel);
 
@@ -144,6 +230,17 @@ QLineSeries* GraphChart::addSeries(const std::vector<double> &x, const std::vect
     m_chart->createDefaultAxes();
     /*hide the legend*/
     m_chart->legend()->hide();
+
+    QValueAxis* xAxis = qobject_cast<QValueAxis*>(m_chart->axisX());
+    QValueAxis* yAxis = qobject_cast<QValueAxis*>(m_chart->axisY());
+if (xAxis) 
+    {
+    connect(xAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
+    }
+if (yAxis) 
+    {
+    connect(yAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
+    }
     
     return series;
 }
@@ -182,5 +279,4 @@ void GraphChart::setSeriesVisible(const QString& name, bool visible)
 
 
 /***********Functions Here*****************/
-
 
