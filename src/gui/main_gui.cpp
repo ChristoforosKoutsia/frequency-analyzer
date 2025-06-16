@@ -39,11 +39,17 @@ void runGui() {
     GraphChart* chartWidget = new GraphChart(mainWindow);
     chartWidget->createChart("Signals Chart");
 
+    /* create a new chartWidget for the Live plotting section*/
+    GraphChart* liveRecordingChart = new GraphChart(mainWindow);
+    liveRecordingChart->createChart("Live Recording");
+
+
     GraphChart* fftChartWidget = new GraphChart(mainWindow);   // Frequency-domain (FFT)
     /* the two new graphs will be part of stacked widgets so we can display one every time*/
     QStackedWidget* stackedWidget = new QStackedWidget(mainWindow);
     stackedWidget->addWidget(chartWidget);      // index 0: time domain
     stackedWidget->addWidget(fftChartWidget);   // index 1: frequency domain
+    stackedWidget->addWidget(liveRecordingChart);   // index 1: frequency domain
 
     /* create the table that will display the signals along with their color and a checkbox 
      * so any signal can be displayed at a time*/
@@ -57,13 +63,21 @@ void runGui() {
     ShowTimeDomainAction* showTimeAction = new ShowTimeDomainAction(stackedWidget);
     ChartView* timeDomainChartView = static_cast<ChartView*>(chartWidget->chartView());
     ShowCursorAction* cursorAction = new ShowCursorAction(timeDomainChartView);
+    LiveSectionAction* showlivesection = new LiveSectionAction(stackedWidget);
+    LiveRecordingAction* liveRecordingOption = new LiveRecordingAction(showlivesection,liveRecordingChart);
+    //liveRecordingOption->setEnabled(false);
+
+    /* add more actions here....*/
     std::vector<BaseAction*> actions = { 
                                         homeAction,
                                         fftAction,
                                         showFFTAction,
                                         showTimeAction,
-                                        cursorAction
+                                        cursorAction,
+                                        showlivesection,
+                                        liveRecordingOption
                                        };
+
     //ToolBar* toolbar = new ToolBar(mainWindow, actions);
 
 
@@ -77,10 +91,13 @@ void runGui() {
     MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable);
     std::vector<BaseAction*> menubar_actions = {addsignalAction,
                                             homeAction,
-                                        fftAction,
-                                        showFFTAction,
-                                        showTimeAction,
-                                        cursorAction};
+                                            fftAction,
+                                            showFFTAction,
+                                            showTimeAction,
+                                            cursorAction,
+                                            showlivesection,
+                                            liveRecordingOption
+                                        };
     MenuBar* menubar = new MenuBar(menubar_actions);
     /* Add the menuBar */
     mainWindow->setMenuBar(menubar);

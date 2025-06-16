@@ -22,6 +22,8 @@
 #include <fstream>
 #include "GraphChart.hpp"
 #include "MenuBar.hpp"
+#include <QElapsedTimer>
+#include <QDateTime>
 /******************************************************* */
 
 static  std::vector<FFTResult> m_fftResults;
@@ -61,6 +63,9 @@ QStringList fileNames = QFileDialog::getOpenFileNames(
     QString(),
     "CSV Files (*.csv)"
 );
+
+static double offset = 0.0;
+static double previousUpperLimit = 0.0; // To keep track of the upper limit of the previous sequence
 for (const QString& fileName : fileNames) 
 {
     if (!fileName.isEmpty()) {
@@ -71,20 +76,27 @@ for (const QString& fileName : fileNames)
         // Plot the data
         if (!my_sig_data.time.empty() && !my_sig_data.volts.empty()) 
         {
-            //m_chartWidget->clearChart();
-
+            /* compute the offset ao visually they are not all sequences together.
+             * the point is that we keep the upper limit of the previous sequence
+             * and we add on top*/
+             double current_max_voltage = *std::max_element(my_sig_data.volts.begin(), my_sig_data.volts.end());
+             double current_min_voltage = *std::min_element(my_sig_data.volts.begin(), my_sig_data.volts.end());
+             offset += previousUpperLimit + std::abs(current_min_voltage);
             /* Extracting just the file name (without path) for the plot*/ 
             QFileInfo fileInfo(fileName);
             QString csvName = fileInfo.baseName();
-           QLineSeries* current_series =  m_chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, csvName);
+           QLineSeries* current_series =  m_chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, csvName,offset);
 
             /*random color for now*/
             QColor color = current_series->pen().color();
 
             /* also the signal should be in the tablewidget*/
             m_tableWidget->AddRow(color,csvName);
+
+            previousUpperLimit = current_max_voltage;
         }
     }
+
 }
 }
 
@@ -192,6 +204,83 @@ void ShowCursorAction::handler()
 
 
 
+LiveSectionAction::LiveSectionAction(QStackedWidget* stackedWidget)
+: BaseAction(QIcon(""), "Show LiveSection", true),
+  m_stackedWidget(stackedWidget)
+  {
+    /* do nothing*/
+  }
+
+void LiveSectionAction::handler()
+{
+    /* create new graph widget and just one series for now*/
+    m_chart = new GraphChart(m_stackedWidget);
+    m_stackedWidget->setCurrentIndex(2);
+}
+
+GraphChart* LiveSectionAction:: GetGraphChart(void)
+{
+    return m_chart;
+}
+
+
+LiveRecordingAction::LiveRecordingAction(LiveSectionAction* live_action,GraphChart* graph_chart)
+: BaseAction(QIcon(""), "Live Recording", true,live_action),
+  m_graph_widget(graph_chart),
+  m_series(nullptr)
+  {
+  }
+
+void LiveRecordingAction::handler()
+{
+        //auto* live_action = static_cast<LiveSectionAction*>(parent());
+   // m_graph_widget = live_action->GetGraphChart();
+        if (!m_series) 
+        {
+        m_series = new QLineSeries();
+        m_series->setName("Signal1");
+        m_graph_widget->chart()->addSeries(m_series);
+        m_graph_widget->chart()->createDefaultAxes();
+        m_series->attachAxis(m_graph_widget->chart()->axisX());
+        m_series->attachAxis(m_graph_widget->chart()->axisY());
+    }
+    /* try to connect and estamblish a connection here*/
+       m_serial_com.SerialCom_Connect([this](const std::vector<uint8_t>& data)
+    {
+
+        if (!m_graph_widget || !m_series)
+            return;
+        updatePlot(data);
+    }
+    );
+    
+}
+
+void LiveRecordingAction::updatePlot(const std::vector<uint8_t>& data)
+{
+qint64 currentTimeMs = QDateTime::currentMSecsSinceEpoch();
+    static qint64 startTimeMs = -1;
+    if (startTimeMs < 0)
+        startTimeMs = currentTimeMs;
+
+    qint64 elapsedMs = currentTimeMs - startTimeMs;
+
+    /* dummy test for now just take the first signal*/
+
+    for (char byte : data)
+    {
+        qreal y = static_cast<qreal>(byte);
+
+        // Use elapsed time for X, optionally add offset for each byte if needed
+        m_series->append(elapsedMs, y);
+    }
+     m_graph_widget->chart()->axisX()->setRange(0, elapsedMs + 1000); // adjust as needed
+    m_graph_widget->chart()->axisY()->setRange(-5, 5); // for uint8_t data
+    m_graph_widget->chart()->update();
+}
+LiveRecordingAction::~LiveRecordingAction() {
+    m_serial_com.SerialCom_Connect(nullptr); // or provide a disconnect method
+}
 /***********Functions Here*****************/
 
 QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName)

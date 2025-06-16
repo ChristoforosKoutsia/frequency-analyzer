@@ -1,6 +1,4 @@
 cmake_minimum_required(VERSION  3.13)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/lib/cmake")
 
 project(SpectraForge VERSION 1.0)
 
@@ -17,6 +15,9 @@ set(CMAKE_AUTORCC ON)
 file(GLOB_RECURSE GUI_SOURCES
     "${CMAKE_SOURCE_DIR}/gui/*.cpp"
     "${CMAKE_SOURCE_DIR}/gui/*.hpp"
+    "${CMAKE_SOURCE_DIR}/sysio/*.hpp"
+    "${CMAKE_SOURCE_DIR}/sysio/include/*.hpp"
+    "${CMAKE_SOURCE_DIR}/sysio/src/*.cpp"
 )
 
 set(SOURCES 
@@ -37,6 +38,7 @@ add_executable(SpectraForge ${SOURCES})
 
 target_include_directories(SpectraForge PRIVATE
     ${FFT_DIR}
+    ${CMAKE_SOURCE_DIR}/sysio/include
     ${CMAKE_SOURCE_DIR}/sysio
     ${CMAKE_SOURCE_DIR}/signal
     ${CMAKE_SOURCE_DIR}/gui/Widgets/include
@@ -48,10 +50,10 @@ target_include_directories(SpectraForge PRIVATE
 message("FFT_LIB: ${FFT_LIB}")
 
 # Find the Qt6 package
-find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Charts SerialPort)
 
 
-target_link_libraries(SpectraForge Qt6::Widgets Qt6::Charts ${FFT_LIB} )
+target_link_libraries(SpectraForge Qt6::Widgets Qt6::Charts ${FFT_LIB} Qt6::SerialPort )
 
 # Add the FFTW DLL to the output folder after the build
  add_custom_command(TARGET SpectraForge POST_BUILD
@@ -75,44 +77,10 @@ add_custom_command(TARGET SpectraForge POST_BUILD
 
 add_custom_command(TARGET SpectraForge POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Core.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6Core.dll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Widgets.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6Widgets.dll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Gui.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6Gui.dll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Charts.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6Charts.dll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6OpenGL.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6OpenGL.dll
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6OpenGLWidgets.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6OpenGLWidgets.dll
-)
-
-add_custom_command(TARGET SpectraForge POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/plugins/platforms"
-    "$<TARGET_FILE_DIR:SpectraForge>/platforms"
-)
-
-add_custom_command(TARGET SpectraForge POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/plugins/imageformats"
-    "$<TARGET_FILE_DIR:SpectraForge>/imageformats"
-)
-
-
-add_custom_command(TARGET SpectraForge POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_SOURCE_DIR}/3rdparty/Qt/6.9.0/mingw_64/bin/Qt6Svg.dll"
-    $<TARGET_FILE_DIR:SpectraForge>/Qt6Svg.dll
+    "${CMAKE_SOURCE_DIR}/run_me.bat"
+    "$<TARGET_FILE_DIR:SpectraForge>/run_me.bat"
 )
 
 
 # Make the application only executable and NOT a console application
-set_target_properties(SpectraForge PROPERTIES WIN32_EXECUTABLE TRUE)
+ set_target_properties(SpectraForge PROPERTIES WIN32_EXECUTABLE TRUE)

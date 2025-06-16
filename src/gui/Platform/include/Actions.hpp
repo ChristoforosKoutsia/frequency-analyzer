@@ -25,6 +25,7 @@
 #include "MainWindows.hpp"
 #include "MenuBar.hpp"
 #include "Table.hpp"
+#include "sysio/include/serial_com.hpp"
 /*****************************************/
 
 
@@ -126,6 +127,41 @@ public:
     void handler() override ;
 private:
     ChartView* m_chart_view;
+};
+
+
+
+class LiveSectionAction : public BaseAction
+{
+    /* with this action we change to Live Recoding section
+     * where we can start recording live data. There a new chart will be appeared in the main Window */
+public:
+    LiveSectionAction(QStackedWidget* stackedWidget);
+    void handler() override ;
+    GraphChart* GetGraphChart(void);
+protected:
+GraphChart* m_chart;
+private:
+    QStackedWidget* m_stackedWidget;
+    
+    
+};
+
+
+class LiveRecordingAction : public BaseAction
+{
+    /* with this action we start recording through UART or Ethernet ( for now only UART)
+     * is supported!*/
+public:
+    LiveRecordingAction(LiveSectionAction* live_action,GraphChart* graph_chart);
+    ~LiveRecordingAction();
+    void handler() override ;
+    void updatePlot(const std::vector<uint8_t>& data);
+private:
+    GraphChart* m_graph_widget;
+    SerialCom m_serial_com;
+    /* this is the signals/series that will be plotted*/
+    QLineSeries* m_series;
 };
 
 

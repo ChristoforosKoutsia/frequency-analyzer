@@ -200,7 +200,10 @@ void GraphChart::createChart(const QString &title)
 }
 
 
-QLineSeries* GraphChart::addSeries(const std::vector<double> &x, const std::vector<double> &y, const QString &seriesName)
+QLineSeries* GraphChart::addSeries(const std::vector<double> &x, 
+                                   const std::vector<double> &y, 
+                                   const QString &seriesName,
+                                   const double& yoffset)
 {
     if (x.size() != y.size() || x.empty())
         return nullptr;
@@ -209,7 +212,7 @@ QLineSeries* GraphChart::addSeries(const std::vector<double> &x, const std::vect
     series->setName(seriesName);
 
     for (size_t i = 0; i < x.size(); ++i)
-        series->append(x[i], y[i]);
+        series->append(x[i], y[i] + yoffset);
 
     /* This feature is to adjust the line width*/
     QPen pen = series->pen();
@@ -233,13 +236,13 @@ QLineSeries* GraphChart::addSeries(const std::vector<double> &x, const std::vect
 
     QValueAxis* xAxis = qobject_cast<QValueAxis*>(m_chart->axisX());
     QValueAxis* yAxis = qobject_cast<QValueAxis*>(m_chart->axisY());
-if (xAxis) 
+    if (xAxis) 
     {
-    connect(xAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
+        connect(xAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
     }
-if (yAxis) 
+    if (yAxis) 
     {
-    connect(yAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
+        connect(yAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
     }
     
     return series;

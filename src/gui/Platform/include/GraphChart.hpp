@@ -62,7 +62,8 @@ public:
     void createChart(const QString &title = "Signals") override;
     QLineSeries* addSeries(const std::vector<double> &x, 
                            const std::vector<double> &y, 
-                           const QString &seriesName = "Series") override;
+                           const QString &seriesName = "Series",
+                         const double& yoffset = 0u) override;
     void clearChart() override;
     void setTitle(const QString &title) override;
     QChart* chart() override;

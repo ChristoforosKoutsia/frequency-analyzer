@@ -115,7 +115,10 @@ class BaseGraphChart : public QWidget
 public:
     explicit BaseGraphChart(QWidget *parent = nullptr) : QWidget(parent) {}
     virtual void createChart(const QString &title = "Signals") = 0;
-    virtual QLineSeries* addSeries(const std::vector<double> &x, const std::vector<double> &y, const QString &seriesName = "Series") = 0;
+    virtual QLineSeries* addSeries(const std::vector<double> &x, 
+                                const std::vector<double> &y,
+                                const QString &seriesName = "Series",
+                                const double& yoffset = 0u) = 0;
     virtual void clearChart() = 0;
     virtual void setTitle(const QString &title) = 0;
     virtual QChart* chart() = 0;
