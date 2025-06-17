@@ -37,15 +37,15 @@ QChartView {
 QToolBar {
     background: #2d2d2d;
     border-right: 1px solid #222;
-    spacing: 4px;
+    spacing: 1px;
 }
 
 QToolButton {
     background: transparent;
     border: none;
     color: #d4d4d4;
-    padding: 6px 10px;
-    margin: 2px;
+    padding: 2px 4px;
+    margin: 1px;
 }
 QToolButton:hover {
     background: #37373d;

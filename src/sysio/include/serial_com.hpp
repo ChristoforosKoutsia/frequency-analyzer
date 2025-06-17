@@ -7,6 +7,12 @@
 #include <functional>
 #include <QByteArray>
 #include <qtimer.h>
+struct SerialComConfig
+{
+    QString port_name;
+    QSerialPort::BaudRate baud_rate;
+};
+
 /**
  * @brief Serial Com class implements the communication between external
  * Device and host device through the serial port. The user shall indicate 
@@ -20,6 +26,7 @@ public:
     /* class to implement the UART serial communication*/
     SerialCom(); /* this interface apparently will change since we */
     void SerialCom_Connect(std::function<void(const std::vector<uint8_t>&)> onDataCallback);
+    void SerialComSetCOMConfig(SerialComConfig& config);
 private :
         QSerialPort::BaudRate m_baudrate;
         QSerialPort::Parity m_parity;
@@ -51,3 +58,5 @@ struct SerialDataPacket
 
 /* this shall be probably be part of the class (?)*/
 QList<SerialDataPacket> SerialCom_decodeMsg(QByteArray& rawData);
+
+

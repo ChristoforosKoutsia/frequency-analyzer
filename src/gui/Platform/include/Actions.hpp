@@ -156,14 +156,28 @@ public:
     LiveRecordingAction(LiveSectionAction* live_action,GraphChart* graph_chart);
     ~LiveRecordingAction();
     void handler() override ;
-    void updatePlot(const std::vector<uint8_t>& data);
+    void ApplyCOMConfigSettings(SerialComConfig &config);
 private:
+    void updatePlot(const std::vector<uint8_t>& data);
     GraphChart* m_graph_widget;
     SerialCom m_serial_com;
     /* this is the signals/series that will be plotted*/
     QLineSeries* m_series;
 };
 
+class ConfigureSessionAction : public BaseAction
+{
+public:
+    ConfigureSessionAction(QWidget* parentWidget,LiveRecordingAction* live_rec_act);
+    void handler() override;
+private:
+    QWidget* m_parentWidget;
+    // Store config if needed
+    QString m_protocol;
+    QString m_baudrate;
+    QString m_port;
+    LiveRecordingAction* m_live_rec;
+};
 
 /* Utility Funtions here ... To be refactored */
 

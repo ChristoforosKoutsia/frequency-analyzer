@@ -24,6 +24,7 @@
 #include "MenuBar.hpp"
 #include <QElapsedTimer>
 #include <QDateTime>
+#include "ConfigDialog.hpp"
 /******************************************************* */
 
 static  std::vector<FFTResult> m_fftResults;
@@ -182,7 +183,7 @@ void ShowFFTAction::handler()
 }
 
 ShowCursorAction :: ShowCursorAction(ChartView* chart_view)
-                    : BaseAction(QIcon("icons/toggle_on"), "Show Cursor", false),
+                    : BaseAction(QIcon("icons/toggle_on"), "Show Cursor", true),
                     m_chart_view(chart_view)
                     {}
 void ShowCursorAction::handler()
@@ -231,6 +232,10 @@ LiveRecordingAction::LiveRecordingAction(LiveSectionAction* live_action,GraphCha
   {
   }
 
+void LiveRecordingAction::ApplyCOMConfigSettings(SerialComConfig &config)
+{
+    m_serial_com.SerialComSetCOMConfig(config);
+}
 void LiveRecordingAction::handler()
 {
         //auto* live_action = static_cast<LiveSectionAction*>(parent());
@@ -245,6 +250,8 @@ void LiveRecordingAction::handler()
         m_series->attachAxis(m_graph_widget->chart()->axisY());
     }
     /* try to connect and estamblish a connection here*/
+    /* first set the settings from the user's configuration*/
+       
        m_serial_com.SerialCom_Connect([this](const std::vector<uint8_t>& data)
     {
 
@@ -281,6 +288,35 @@ qint64 currentTimeMs = QDateTime::currentMSecsSinceEpoch();
 LiveRecordingAction::~LiveRecordingAction() {
     m_serial_com.SerialCom_Connect(nullptr); // or provide a disconnect method
 }
+
+// Actions.cpp
+ConfigureSessionAction::ConfigureSessionAction(QWidget* parentWidget,LiveRecordingAction* live_rec_act)
+    : BaseAction(QIcon("icons/settings.svg"), "Configure Session", false, parentWidget),
+      m_parentWidget(parentWidget),
+      m_live_rec(live_rec_act)
+{}
+
+void ConfigureSessionAction::handler()
+{
+    ConfigDialog dlg(m_parentWidget);
+    if (dlg.exec() == QDialog::Accepted) 
+    {
+        m_protocol = dlg.protocol();
+        m_baudrate = dlg.baudrate();
+        m_port = dlg.port();
+
+        SerialComConfig loc_config; /*local configuration from the user*/
+        loc_config.port_name = m_port;
+        uint32_t loc_baud_rate  = m_baudrate.toLong();
+        loc_config.baud_rate = static_cast<QSerialPort::BaudRate>(loc_baud_rate);
+        m_live_rec->ApplyCOMConfigSettings(loc_config);
+        // Use these values to configure SerialCom or store for later use
+        QMessageBox::information(m_parentWidget, "Session Configured",
+            QString("Protocol: %1\nBaudrate: %2\nPort: %3")
+            .arg(m_protocol, m_baudrate, m_port));
+    }
+}
+
 /***********Functions Here*****************/
 
 QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName)

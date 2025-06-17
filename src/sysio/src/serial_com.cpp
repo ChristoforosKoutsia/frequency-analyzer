@@ -4,9 +4,9 @@
 
 SerialCom::SerialCom()
 {
-    
+    /* this is the default values on startup*/
     m_serial.setPortName("COM3"); // harcoded for now
-    m_serial.setBaudRate(QSerialPort::Baud9600);
+    m_serial.setBaudRate(QSerialPort::Baud115200);
     m_serial.setDataBits(QSerialPort::Data8);
     m_serial.setParity(QSerialPort::NoParity);
     m_serial.setStopBits(QSerialPort::OneStop);
@@ -16,6 +16,9 @@ SerialCom::SerialCom()
 /* takes as argument a lamda function which does anything with the available data */
 void SerialCom::SerialCom_Connect(std::function<void(const std::vector<uint8_t>&)> onDataCallback)
 {
+    /* just debug staff*/
+    qint32 tmp_val = m_serial.baudRate();
+    QString tmp_str = m_serial.portName();
     m_onDataCallback = std::move(onDataCallback);
     if (m_serial.open(QIODevice::ReadWrite)) 
     {
@@ -55,7 +58,11 @@ void SerialCom::SerialCom_Connect(std::function<void(const std::vector<uint8_t>&
     }
 }
 
-
+void SerialCom::SerialComSetCOMConfig(SerialComConfig& config)
+{
+    m_serial.setPortName(config.port_name); // harcoded for now
+    m_serial.setBaudRate(config.baud_rate);
+}
 
 
 /* Eventually we need a decode function for the incoming messages.

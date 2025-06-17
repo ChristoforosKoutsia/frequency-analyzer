@@ -65,38 +65,35 @@ void runGui() {
     ShowCursorAction* cursorAction = new ShowCursorAction(timeDomainChartView);
     LiveSectionAction* showlivesection = new LiveSectionAction(stackedWidget);
     LiveRecordingAction* liveRecordingOption = new LiveRecordingAction(showlivesection,liveRecordingChart);
+    ConfigureSessionAction* configSessionAction = new ConfigureSessionAction(mainWindow,liveRecordingOption);
+
     //liveRecordingOption->setEnabled(false);
 
     /* add more actions here....*/
     std::vector<BaseAction*> actions = { 
-                                        homeAction,
                                         fftAction,
                                         showFFTAction,
                                         showTimeAction,
                                         cursorAction,
                                         showlivesection,
-                                        liveRecordingOption
+                                        liveRecordingOption,
                                        };
 
-    //ToolBar* toolbar = new ToolBar(mainWindow, actions);
-
+    ToolBar* toolbar = new ToolBar(mainWindow, actions);
+    //toolbar->setIconSize(QSize(25, 25));
+    toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    toolbar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);                                   
 
     // Add toolbar to the left
     /*When we use addToolBar and setCentralWidget, Qt automatically sets the parent of 
     toolbar and chartWidget to mainWindow. We have passed it explicitely
      as parent as the contructor as well*/
-    //mainWindow->addToolBar(Qt::LeftToolBarArea, toolbar);
+    mainWindow->addToolBar(Qt::TopToolBarArea, toolbar);
 
     /* add the menubar with its actions*/
     MenuBarAddSignal* addsignalAction = new MenuBarAddSignal(mainWindow,chartWidget,signalsTable);
     std::vector<BaseAction*> menubar_actions = {addsignalAction,
-                                            homeAction,
-                                            fftAction,
-                                            showFFTAction,
-                                            showTimeAction,
-                                            cursorAction,
-                                            showlivesection,
-                                            liveRecordingOption
+                                            configSessionAction
                                         };
     MenuBar* menubar = new MenuBar(menubar_actions);
     /* Add the menuBar */
