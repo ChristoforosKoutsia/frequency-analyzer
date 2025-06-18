@@ -182,4 +182,5 @@ private:
 /* Utility Funtions here ... To be refactored */
 
 QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName);
+std::vector<double> normalizeToMinusOneOne(const std::vector<double>& input);
 #endif // ACTIONS_HPP

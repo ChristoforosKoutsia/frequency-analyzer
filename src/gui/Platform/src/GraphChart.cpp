@@ -196,7 +196,7 @@ void GraphChart::createChart(const QString &title)
 {
     m_chart->removeAllSeries();
     m_chart->setTitle(title);
-    m_chart->createDefaultAxes();
+
 }
 
 
@@ -231,17 +231,29 @@ QLineSeries* GraphChart::addSeries(const std::vector<double> &x,
     series->setPointsVisible(true);
     m_chart->addSeries(series);
     m_chart->createDefaultAxes();
+        // Make grid denser and dashed
+    QValueAxis* xAxis = qobject_cast<QValueAxis*>(m_chart->axisX());
+    QValueAxis* yAxis = qobject_cast<QValueAxis*>(m_chart->axisY());
+
     /*hide the legend*/
     m_chart->legend()->hide();
 
-    QValueAxis* xAxis = qobject_cast<QValueAxis*>(m_chart->axisX());
-    QValueAxis* yAxis = qobject_cast<QValueAxis*>(m_chart->axisY());
     if (xAxis) 
     {
+        xAxis->setTickCount(14); // Increase for more density
+        QPen gridPen(Qt::gray);
+        gridPen.setStyle(Qt::DashLine);
+        gridPen.setWidth(1);
+        xAxis->setGridLinePen(gridPen);
         connect(xAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
     }
     if (yAxis) 
     {
+        yAxis->setTickCount(14); // Increase for more density
+        QPen gridPen(Qt::gray);
+        gridPen.setStyle(Qt::DashLine);
+        gridPen.setWidth(1);
+        yAxis->setGridLinePen(gridPen);
         connect(yAxis, &QValueAxis::rangeChanged, this, [this]() { m_chartView->updateCursorLine(); });
     }
     

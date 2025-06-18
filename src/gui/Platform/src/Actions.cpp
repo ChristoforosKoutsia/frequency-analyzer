@@ -73,20 +73,20 @@ for (const QString& fileName : fileNames)
         CsvHandler my_handler;
         const std::string loc_filename = fileName.toStdString();
         SignalData my_sig_data = my_handler.parse(loc_filename);
-
+        std::vector<double> normalized_volts = normalizeToMinusOneOne(my_sig_data.volts);
         // Plot the data
-        if (!my_sig_data.time.empty() && !my_sig_data.volts.empty()) 
+        if (!my_sig_data.time.empty() && !normalized_volts.empty()) 
         {
-            /* compute the offset ao visually they are not all sequences together.
+            /* compute the offset so visually they are not all sequences together.
              * the point is that we keep the upper limit of the previous sequence
              * and we add on top*/
-             double current_max_voltage = *std::max_element(my_sig_data.volts.begin(), my_sig_data.volts.end());
-             double current_min_voltage = *std::min_element(my_sig_data.volts.begin(), my_sig_data.volts.end());
+             double current_max_voltage = *std::max_element(normalized_volts.begin(), normalized_volts.end());
+             double current_min_voltage = *std::min_element(normalized_volts.begin(), normalized_volts.end());
              offset += previousUpperLimit + std::abs(current_min_voltage);
             /* Extracting just the file name (without path) for the plot*/ 
             QFileInfo fileInfo(fileName);
             QString csvName = fileInfo.baseName();
-           QLineSeries* current_series =  m_chartWidget->addSeries(my_sig_data.time, my_sig_data.volts, csvName,offset);
+           QLineSeries* current_series =  m_chartWidget->addSeries(my_sig_data.time, normalized_volts, csvName,offset);
 
             /*random color for now*/
             QColor color = current_series->pen().color();
@@ -331,4 +331,22 @@ QLineSeries* findSeriesByName(GraphChart* graph_widget, QString signalName)
         }
     }
     return nullptr;
+}
+
+std::vector<double> normalizeToMinusOneOne(const std::vector<double>& input) {
+    if (input.empty()) return {};
+    double minVal = *std::min_element(input.begin(), input.end());
+    double maxVal = *std::max_element(input.begin(), input.end());
+    std::vector<double> output;
+    output.reserve(input.size());
+    if (maxVal == minVal) {
+        // All values are the same, map to 0
+        output.assign(input.size(), 0.0);
+    } else {
+        for (double v : input) {
+            double norm = 2.0 * (v - minVal) / (maxVal - minVal) - 1.0;
+            output.push_back(norm);
+        }
+    }
+    return output;
 }
