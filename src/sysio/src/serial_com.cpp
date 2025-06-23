@@ -17,6 +17,7 @@ SerialCom::SerialCom()
 void SerialCom::SerialCom_Connect(std::function<void(const std::vector<uint8_t>&)> onDataCallback)
 {
     /* just debug staff*/
+    
     qint32 tmp_val = m_serial.baudRate();
     QString tmp_str = m_serial.portName();
     m_onDataCallback = std::move(onDataCallback);
@@ -25,14 +26,14 @@ void SerialCom::SerialCom_Connect(std::function<void(const std::vector<uint8_t>&
         /* this will implicitely called when new data will arrive*/
         /* We can try the following method. Stack data on a circular buffer
          and call callback function when there are no data for 5ms(configurable) */
-        QObject::connect(&m_serial, &QSerialPort::readyRead, [&]() 
+        m_readyReadConn = QObject::connect(&m_serial, &QSerialPort::readyRead, [&]() 
         {
              m_serialBuffer = m_serial.readAll();
              m_bufferTimer->start(5);
 
         });
-        
-        QObject::connect(m_bufferTimer, &QTimer::timeout, [&]() 
+    
+        m_timerConn =QObject::connect(m_bufferTimer, &QTimer::timeout, [&]() 
         {
         // Called when no new data came for 5ms
         /*decode first*/
@@ -88,4 +89,15 @@ QList<SerialDataPacket> SerialCom_decodeMsg(QByteArray& rawData)
 void SerialCom_ProcessDecodedMsg()
 {
     /*takes decoded msg, validate it, and extract data based on the type*/
+}
+
+void SerialCom::disconnect() 
+{
+    if (m_serial.isOpen())
+        m_serial.close();
+    if (m_readyReadConn)
+    QObject::disconnect(m_readyReadConn);
+    if (m_timerConn)
+    QObject::disconnect(m_timerConn);
+    m_onDataCallback = nullptr;
 }

@@ -27,6 +27,7 @@ public:
     SerialCom(); /* this interface apparently will change since we */
     void SerialCom_Connect(std::function<void(const std::vector<uint8_t>&)> onDataCallback);
     void SerialComSetCOMConfig(SerialComConfig& config);
+    void disconnect();
 private :
         QSerialPort::BaudRate m_baudrate;
         QSerialPort::Parity m_parity;
@@ -36,6 +37,10 @@ private :
         QByteArray m_serialBuffer;
         QTimer* m_bufferTimer;
         std::function<void(const std::vector<uint8_t>&)> m_onDataCallback;
+        /* in order to avoid stale or duplicate signal connection
+         we shall disconnect properly the signals*/
+        QMetaObject::Connection m_readyReadConn;
+        QMetaObject::Connection m_timerConn;
 };
 
 

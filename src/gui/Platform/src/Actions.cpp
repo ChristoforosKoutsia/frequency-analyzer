@@ -205,9 +205,10 @@ void ShowCursorAction::handler()
 
 
 
-LiveSectionAction::LiveSectionAction(QStackedWidget* stackedWidget)
+LiveSectionAction::LiveSectionAction(QStackedWidget* stackedWidget,QToolBar* toolbar)
 : BaseAction(QIcon(""), "Show LiveSection", true),
-  m_stackedWidget(stackedWidget)
+  m_stackedWidget(stackedWidget),
+  m_toolbar(toolbar)
   {
     /* do nothing*/
   }
@@ -216,6 +217,8 @@ void LiveSectionAction::handler()
 {
     /* create new graph widget and just one series for now*/
     m_chart = new GraphChart(m_stackedWidget);
+    m_toolbar->setVisible(true);
+    
     m_stackedWidget->setCurrentIndex(2);
 }
 
@@ -236,18 +239,23 @@ void LiveRecordingAction::ApplyCOMConfigSettings(SerialComConfig &config)
 {
     m_serial_com.SerialComSetCOMConfig(config);
 }
+
+void LiveRecordingAction::stopRecording()
+{
+    m_serial_com.disconnect();
+
+}
+
 void LiveRecordingAction::handler()
 {
         //auto* live_action = static_cast<LiveSectionAction*>(parent());
    // m_graph_widget = live_action->GetGraphChart();
         if (!m_series) 
-        {
+    {
         m_series = new QLineSeries();
         m_series->setName("Signal1");
         m_graph_widget->chart()->addSeries(m_series);
         m_graph_widget->chart()->createDefaultAxes();
-        m_series->attachAxis(m_graph_widget->chart()->axisX());
-        m_series->attachAxis(m_graph_widget->chart()->axisY());
     }
     /* try to connect and estamblish a connection here*/
     /* first set the settings from the user's configuration*/
@@ -282,7 +290,7 @@ qint64 currentTimeMs = QDateTime::currentMSecsSinceEpoch();
         m_series->append(elapsedMs, y);
     }
      m_graph_widget->chart()->axisX()->setRange(0, elapsedMs + 1000); // adjust as needed
-    m_graph_widget->chart()->axisY()->setRange(-5, 5); // for uint8_t data
+    m_graph_widget->chart()->axisY()->setRange(0, 150); // this is just for now!!!
     m_graph_widget->chart()->update();
 }
 LiveRecordingAction::~LiveRecordingAction() {
@@ -316,6 +324,22 @@ void ConfigureSessionAction::handler()
             .arg(m_protocol, m_baudrate, m_port));
     }
 }
+
+
+StopRecordingAction::StopRecordingAction(LiveRecordingAction* live_recording_handler)
+    : BaseAction(QIcon("icons/stop.svg"), "Stop Recording", false, live_recording_handler),
+      m_live_rec(live_recording_handler)
+{}
+
+void StopRecordingAction::handler()
+{
+    if (m_live_rec) {
+        m_live_rec->stopRecording();
+        QMessageBox::information(nullptr, "Stopped", "Live recording stopped.");
+    }
+}
+
+
 
 /***********Functions Here*****************/
 

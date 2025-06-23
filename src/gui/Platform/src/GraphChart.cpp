@@ -64,6 +64,13 @@ void ChartView::wheelEvent(QWheelEvent *event)
 
 void ChartView::keyPressEvent(QKeyEvent *event)
 {
+    if (event->key() == Qt::Key_F) {
+        if (chart()) {
+            chart()->zoomReset(); // Reset zoom to original view
+        }
+        event->accept();
+        return;
+    }
     QChartView::keyPressEvent(event);
 }
 

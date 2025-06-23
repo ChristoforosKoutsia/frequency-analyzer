@@ -43,6 +43,8 @@ void runGui() {
     GraphChart* liveRecordingChart = new GraphChart(mainWindow);
     liveRecordingChart->createChart("Live Recording");
 
+     QToolBar* liveToolbar = new QToolBar("Live Controls", mainWindow);
+
 
     GraphChart* fftChartWidget = new GraphChart(mainWindow);   // Frequency-domain (FFT)
     /* the two new graphs will be part of stacked widgets so we can display one every time*/
@@ -63,9 +65,11 @@ void runGui() {
     ShowTimeDomainAction* showTimeAction = new ShowTimeDomainAction(stackedWidget);
     ChartView* timeDomainChartView = static_cast<ChartView*>(chartWidget->chartView());
     ShowCursorAction* cursorAction = new ShowCursorAction(timeDomainChartView);
-    LiveSectionAction* showlivesection = new LiveSectionAction(stackedWidget);
+    LiveSectionAction* showlivesection = new LiveSectionAction(stackedWidget,liveToolbar);
     LiveRecordingAction* liveRecordingOption = new LiveRecordingAction(showlivesection,liveRecordingChart);
     ConfigureSessionAction* configSessionAction = new ConfigureSessionAction(mainWindow,liveRecordingOption);
+    StopRecordingAction* stopAction = new StopRecordingAction(liveRecordingOption);
+
 
     //liveRecordingOption->setEnabled(false);
 
@@ -76,13 +80,18 @@ void runGui() {
                                         showTimeAction,
                                         cursorAction,
                                         showlivesection,
-                                        liveRecordingOption,
                                        };
 
     ToolBar* toolbar = new ToolBar(mainWindow, actions);
-    //toolbar->setIconSize(QSize(25, 25));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    toolbar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);                                   
+    toolbar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);   
+    
+   
+    liveToolbar->addAction(liveRecordingOption); // Start
+    liveToolbar->addAction(stopAction);          // Stop
+
+    liveToolbar->setVisible(false); // Hide by default
+    mainWindow->addToolBar(Qt::LeftToolBarArea, liveToolbar);
 
     // Add toolbar to the left
     /*When we use addToolBar and setCentralWidget, Qt automatically sets the parent of 

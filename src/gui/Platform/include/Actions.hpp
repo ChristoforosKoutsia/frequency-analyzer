@@ -136,13 +136,14 @@ class LiveSectionAction : public BaseAction
     /* with this action we change to Live Recoding section
      * where we can start recording live data. There a new chart will be appeared in the main Window */
 public:
-    LiveSectionAction(QStackedWidget* stackedWidget);
+    LiveSectionAction(QStackedWidget* stackedWidget,QToolBar* toolbar);
     void handler() override ;
     GraphChart* GetGraphChart(void);
 protected:
 GraphChart* m_chart;
 private:
     QStackedWidget* m_stackedWidget;
+    QToolBar* m_toolbar;
     
     
 };
@@ -157,6 +158,7 @@ public:
     ~LiveRecordingAction();
     void handler() override ;
     void ApplyCOMConfigSettings(SerialComConfig &config);
+    void stopRecording();
 private:
     void updatePlot(const std::vector<uint8_t>& data);
     GraphChart* m_graph_widget;
@@ -176,6 +178,15 @@ private:
     QString m_protocol;
     QString m_baudrate;
     QString m_port;
+    LiveRecordingAction* m_live_rec;
+};
+
+class StopRecordingAction : public BaseAction
+{
+public:
+    StopRecordingAction(LiveRecordingAction* live_recording_handler);
+    void handler() override;
+private:
     LiveRecordingAction* m_live_rec;
 };
 
